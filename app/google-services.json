@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "516122965831",
+    "project_id": "android-sip-calculator",
+    "storage_bucket": "android-sip-calculator.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:516122965831:android:b65e27ec19879e80c43e62",
+        "android_client_info": {
+          "package_name": "com.appshub.sipcalculator_financeplanner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbUaTf7iDUxUXQ5B3ZgUf1ul8UQJeOJ3I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
