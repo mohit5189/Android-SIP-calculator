@@ -37,7 +37,7 @@ class AdManager private constructor() {
         
         // Calculation types
         enum class CalculationType {
-            SIP, SWP, GOAL
+            SIP, SWP, GOAL, SIMPLE_INTEREST, COMPOUND_INTEREST
         }
         
         @Volatile
@@ -151,6 +151,14 @@ class AdManager private constructor() {
                         goalInterstitialAd = null
                         loadGoalInterstitialAd(context)
                     }
+                    CalculationType.SIMPLE_INTEREST -> {
+                        sipInterstitialAd = null
+                        loadSipInterstitialAd(context)
+                    }
+                    CalculationType.COMPOUND_INTEREST -> {
+                        swpInterstitialAd = null
+                        loadSwpInterstitialAd(context)
+                    }
                 }
             }
             
@@ -169,6 +177,14 @@ class AdManager private constructor() {
                     CalculationType.GOAL -> {
                         goalInterstitialAd = null
                         loadGoalInterstitialAd(context)
+                    }
+                    CalculationType.SIMPLE_INTEREST -> {
+                        sipInterstitialAd = null
+                        loadSipInterstitialAd(context)
+                    }
+                    CalculationType.COMPOUND_INTEREST -> {
+                        swpInterstitialAd = null
+                        loadSwpInterstitialAd(context)
                     }
                 }
             }
@@ -195,10 +211,13 @@ class AdManager private constructor() {
     }
     
     private fun showInterstitialAd(activity: Activity, calculationType: CalculationType) {
+        // For new interest calculators, use existing ad units (rotate between them)
         val interstitialAd = when (calculationType) {
             CalculationType.SIP -> sipInterstitialAd
             CalculationType.SWP -> swpInterstitialAd
             CalculationType.GOAL -> goalInterstitialAd
+            CalculationType.SIMPLE_INTEREST -> sipInterstitialAd // Use SIP ad unit
+            CalculationType.COMPOUND_INTEREST -> swpInterstitialAd // Use SWP ad unit
         }
         
         if (interstitialAd != null) {
@@ -206,11 +225,13 @@ class AdManager private constructor() {
             interstitialAd.show(activity)
         } else {
             Log.w(TAG, "$calculationType interstitial ad not ready. Reloading...")
-            // Try to reload the ad
+            // Try to reload the appropriate ad
             when (calculationType) {
                 CalculationType.SIP -> loadSipInterstitialAd(activity)
                 CalculationType.SWP -> loadSwpInterstitialAd(activity)
                 CalculationType.GOAL -> loadGoalInterstitialAd(activity)
+                CalculationType.SIMPLE_INTEREST -> loadSipInterstitialAd(activity)
+                CalculationType.COMPOUND_INTEREST -> loadSwpInterstitialAd(activity)
             }
         }
     }

@@ -318,4 +318,83 @@ object FinancialCalculator {
         
         return kotlin.math.min(0.95, baseProb + timeBonus)
     }
+    
+    fun calculateSimpleInterest(
+        principal: Double,
+        rate: Double,
+        time: Double
+    ): SimpleInterestResult {
+        val simpleInterest = (principal * rate * time) / 100
+        val maturityAmount = principal + simpleInterest
+        
+        val yearWiseData = mutableListOf<SimpleInterestYearData>()
+        val yearlyInterest = simpleInterest / time
+        
+        for (year in 1..time.toInt()) {
+            val cumulativeInterest = yearlyInterest * year
+            val totalAmount = principal + cumulativeInterest
+            
+            yearWiseData.add(
+                SimpleInterestYearData(
+                    year = year,
+                    yearlyInterest = yearlyInterest,
+                    cumulativeInterest = cumulativeInterest,
+                    totalAmount = totalAmount
+                )
+            )
+        }
+        
+        return SimpleInterestResult(
+            principal = principal,
+            rate = rate,
+            time = time,
+            simpleInterest = simpleInterest,
+            maturityAmount = maturityAmount,
+            yearWiseData = yearWiseData
+        )
+    }
+    
+    fun calculateCompoundInterest(
+        principal: Double,
+        rate: Double,
+        time: Double,
+        compoundingFrequency: Int = 1 // 1=yearly, 4=quarterly, 12=monthly
+    ): CompoundInterestResult {
+        val ratePerPeriod = rate / (100 * compoundingFrequency)
+        val totalPeriods = compoundingFrequency * time
+        val maturityAmount = principal * (1 + ratePerPeriod).pow(totalPeriods)
+        val compoundInterest = maturityAmount - principal
+        
+        val yearWiseData = mutableListOf<CompoundInterestYearData>()
+        
+        for (year in 1..time.toInt()) {
+            val periodsElapsed = compoundingFrequency * year
+            val openingAmount = if (year == 1) principal else {
+                principal * (1 + ratePerPeriod).pow(compoundingFrequency * (year - 1))
+            }
+            val closingAmount = principal * (1 + ratePerPeriod).pow(periodsElapsed)
+            val yearlyInterest = closingAmount - openingAmount
+            val cumulativeInterest = closingAmount - principal
+            
+            yearWiseData.add(
+                CompoundInterestYearData(
+                    year = year,
+                    openingAmount = openingAmount,
+                    yearlyInterest = yearlyInterest,
+                    closingAmount = closingAmount,
+                    cumulativeInterest = cumulativeInterest
+                )
+            )
+        }
+        
+        return CompoundInterestResult(
+            principal = principal,
+            rate = rate,
+            time = time,
+            compoundingFrequency = compoundingFrequency,
+            compoundInterest = compoundInterest,
+            maturityAmount = maturityAmount,
+            yearWiseData = yearWiseData
+        )
+    }
 }

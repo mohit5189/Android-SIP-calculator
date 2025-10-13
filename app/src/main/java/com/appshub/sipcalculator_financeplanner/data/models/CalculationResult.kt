@@ -64,6 +64,40 @@ data class Milestone(
     val isAchieved: Boolean
 )
 
+data class SimpleInterestResult(
+    val principal: Double,
+    val rate: Double,
+    val time: Double,
+    val simpleInterest: Double,
+    val maturityAmount: Double,
+    val yearWiseData: List<SimpleInterestYearData>
+)
+
+data class CompoundInterestResult(
+    val principal: Double,
+    val rate: Double,
+    val time: Double,
+    val compoundingFrequency: Int, // 1=yearly, 4=quarterly, 12=monthly
+    val compoundInterest: Double,
+    val maturityAmount: Double,
+    val yearWiseData: List<CompoundInterestYearData>
+)
+
+data class SimpleInterestYearData(
+    val year: Int,
+    val yearlyInterest: Double,
+    val cumulativeInterest: Double,
+    val totalAmount: Double
+)
+
+data class CompoundInterestYearData(
+    val year: Int,
+    val openingAmount: Double,
+    val yearlyInterest: Double,
+    val closingAmount: Double,
+    val cumulativeInterest: Double
+)
+
 enum class CalculationType {
-    SIP, SWP, GOAL
+    SIP, SWP, GOAL, SIMPLE_INTEREST, COMPOUND_INTEREST
 }

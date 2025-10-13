@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.SIPCalculatorScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.SWPCalculatorScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.GoalCalculatorScreen
+import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.MoreScreen
 import com.appshub.sipcalculator_financeplanner.ui.theme.SIPCalculatorFInancePlannerTheme
 import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
 class MainActivity : ComponentActivity() {
@@ -38,13 +39,15 @@ fun SIPCalculatorApp() {
     val calculatorTitles = listOf(
         "SIP Calculator",
         "SWP Calculator", 
-        "Goal Planning"
+        "Goal Planning",
+        "More"
     )
     
     val screenNames = listOf(
         "sip_calculator",
         "swp_calculator",
-        "goal_calculator"
+        "goal_calculator",
+        "more_calculators"
     )
     
     // Track initial screen view
@@ -99,6 +102,15 @@ fun SIPCalculatorApp() {
                         selectedCalculator = 2 
                     }
                 )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.MoreHoriz, contentDescription = null) },
+                    label = { Text("More") },
+                    selected = selectedCalculator == 3,
+                    onClick = { 
+                        analyticsManager.logButtonClick("navigation_more", screenNames[selectedCalculator])
+                        selectedCalculator = 3 
+                    }
+                )
             }
         }
     ) { paddingValues ->
@@ -112,6 +124,7 @@ fun SIPCalculatorApp() {
                 0 -> SIPCalculatorScreen(analyticsManager)
                 1 -> SWPCalculatorScreen(analyticsManager)
                 2 -> GoalCalculatorScreen(analyticsManager)
+                3 -> MoreScreen(analyticsManager)
             }
         }
     }
