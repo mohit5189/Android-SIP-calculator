@@ -9,6 +9,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 
@@ -37,7 +38,7 @@ class AdManager private constructor() {
         
         // Calculation types
         enum class CalculationType {
-            SIP, SWP, GOAL, SIMPLE_INTEREST, COMPOUND_INTEREST
+            SIP, SWP, GOAL, SIMPLE_INTEREST, COMPOUND_INTEREST, EMI, RD, PPF, FD
         }
         
         @Volatile
@@ -59,6 +60,13 @@ class AdManager private constructor() {
         // Initialize SharedPreferences
         sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         
+        // Configure ads for Families Policy compliance
+        val requestConfiguration = MobileAds.getRequestConfiguration()
+            .toBuilder()
+            .setTagForChildDirectedTreatment(RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE)
+            .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_G)
+            .build()
+        MobileAds.setRequestConfiguration(requestConfiguration)
         
         MobileAds.initialize(context) { initializationStatus ->
             Log.d(TAG, "AdMob initialized: ${initializationStatus.adapterStatusMap}")
@@ -159,6 +167,22 @@ class AdManager private constructor() {
                         swpInterstitialAd = null
                         loadSwpInterstitialAd(context)
                     }
+                    CalculationType.EMI -> {
+                        goalInterstitialAd = null
+                        loadGoalInterstitialAd(context)
+                    }
+                    CalculationType.RD -> {
+                        sipInterstitialAd = null
+                        loadSipInterstitialAd(context)
+                    }
+                    CalculationType.PPF -> {
+                        swpInterstitialAd = null
+                        loadSwpInterstitialAd(context)
+                    }
+                    CalculationType.FD -> {
+                        goalInterstitialAd = null
+                        loadGoalInterstitialAd(context)
+                    }
                 }
             }
             
@@ -186,6 +210,22 @@ class AdManager private constructor() {
                         swpInterstitialAd = null
                         loadSwpInterstitialAd(context)
                     }
+                    CalculationType.EMI -> {
+                        goalInterstitialAd = null
+                        loadGoalInterstitialAd(context)
+                    }
+                    CalculationType.RD -> {
+                        sipInterstitialAd = null
+                        loadSipInterstitialAd(context)
+                    }
+                    CalculationType.PPF -> {
+                        swpInterstitialAd = null
+                        loadSwpInterstitialAd(context)
+                    }
+                    CalculationType.FD -> {
+                        goalInterstitialAd = null
+                        loadGoalInterstitialAd(context)
+                    }
                 }
             }
             
@@ -211,13 +251,17 @@ class AdManager private constructor() {
     }
     
     private fun showInterstitialAd(activity: Activity, calculationType: CalculationType) {
-        // For new interest calculators, use existing ad units (rotate between them)
+        // For new calculators, use existing ad units (rotate between them)
         val interstitialAd = when (calculationType) {
             CalculationType.SIP -> sipInterstitialAd
             CalculationType.SWP -> swpInterstitialAd
             CalculationType.GOAL -> goalInterstitialAd
             CalculationType.SIMPLE_INTEREST -> sipInterstitialAd // Use SIP ad unit
             CalculationType.COMPOUND_INTEREST -> swpInterstitialAd // Use SWP ad unit
+            CalculationType.EMI -> goalInterstitialAd // Use GOAL ad unit
+            CalculationType.RD -> sipInterstitialAd // Use SIP ad unit
+            CalculationType.PPF -> swpInterstitialAd // Use SWP ad unit
+            CalculationType.FD -> goalInterstitialAd // Use GOAL ad unit
         }
         
         if (interstitialAd != null) {
@@ -232,6 +276,10 @@ class AdManager private constructor() {
                 CalculationType.GOAL -> loadGoalInterstitialAd(activity)
                 CalculationType.SIMPLE_INTEREST -> loadSipInterstitialAd(activity)
                 CalculationType.COMPOUND_INTEREST -> loadSwpInterstitialAd(activity)
+                CalculationType.EMI -> loadGoalInterstitialAd(activity)
+                CalculationType.RD -> loadSipInterstitialAd(activity)
+                CalculationType.PPF -> loadSwpInterstitialAd(activity)
+                CalculationType.FD -> loadGoalInterstitialAd(activity)
             }
         }
     }

@@ -397,4 +397,225 @@ object FinancialCalculator {
             yearWiseData = yearWiseData
         )
     }
+    
+    fun calculateEMI(
+        loanAmount: Double,
+        interestRate: Double,
+        loanTenure: Int // in months
+    ): EMIResult {
+        val monthlyRate = interestRate / 12 / 100
+        val emi = if (monthlyRate == 0.0) {
+            loanAmount / loanTenure
+        } else {
+            loanAmount * monthlyRate * (1 + monthlyRate).pow(loanTenure) / ((1 + monthlyRate).pow(loanTenure) - 1)
+        }
+        
+        val totalAmount = emi * loanTenure
+        val totalInterest = totalAmount - loanAmount
+        
+        val yearWiseData = mutableListOf<EMIYearData>()
+        var remainingBalance = loanAmount
+        val monthNames = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+        
+        val totalYears = (loanTenure + 11) / 12 // Round up to nearest year
+        
+        for (year in 1..totalYears) {
+            val yearOpeningBalance = remainingBalance
+            var yearlyPrincipal = 0.0
+            var yearlyInterest = 0.0
+            val monthlyDataList = mutableListOf<EMIMonthData>()
+            
+            val startMonth = (year - 1) * 12 + 1
+            val endMonth = kotlin.math.min(year * 12, loanTenure)
+            
+            for (monthIndex in startMonth..endMonth) {
+                val monthOpeningBalance = remainingBalance
+                val interestPayment = remainingBalance * monthlyRate
+                val principalPayment = emi - interestPayment
+                
+                remainingBalance -= principalPayment
+                yearlyPrincipal += principalPayment
+                yearlyInterest += interestPayment
+                
+                val monthInYear = ((monthIndex - 1) % 12) + 1
+                monthlyDataList.add(
+                    EMIMonthData(
+                        month = monthInYear,
+                        monthName = monthNames[monthInYear - 1],
+                        openingBalance = monthOpeningBalance,
+                        emi = emi,
+                        principalPayment = principalPayment,
+                        interestPayment = interestPayment,
+                        closingBalance = remainingBalance
+                    )
+                )
+            }
+            
+            yearWiseData.add(
+                EMIYearData(
+                    year = year,
+                    openingBalance = yearOpeningBalance,
+                    totalPayment = emi * monthlyDataList.size,
+                    principalPayment = yearlyPrincipal,
+                    interestPayment = yearlyInterest,
+                    closingBalance = remainingBalance,
+                    monthlyData = monthlyDataList
+                )
+            )
+        }
+        
+        return EMIResult(
+            loanAmount = loanAmount,
+            interestRate = interestRate,
+            loanTenure = loanTenure,
+            emi = emi,
+            totalAmount = totalAmount,
+            totalInterest = totalInterest,
+            yearWiseData = yearWiseData
+        )
+    }
+    
+    fun calculateRD(
+        monthlyDeposit: Double,
+        interestRate: Double,
+        tenure: Int // in years
+    ): RDResult {
+        val monthlyRate = interestRate / 12 / 100
+        val totalMonths = tenure * 12
+        
+        var maturityAmount = 0.0
+        for (month in 1..totalMonths) {
+            val monthsRemaining = totalMonths - month + 1
+            maturityAmount += monthlyDeposit * (1 + monthlyRate).pow(monthsRemaining)
+        }
+        
+        val totalDeposits = monthlyDeposit * totalMonths
+        val totalInterest = maturityAmount - totalDeposits
+        
+        val yearWiseData = mutableListOf<RDYearData>()
+        var currentBalance = 0.0
+        var cumulativeDeposits = 0.0
+        
+        for (year in 1..tenure) {
+            val yearOpeningBalance = currentBalance
+            val yearlyDeposits = monthlyDeposit * 12
+            cumulativeDeposits += yearlyDeposits
+            
+            // Calculate interest earned during the year
+            var yearlyInterest = 0.0
+            var tempBalance = yearOpeningBalance
+            
+            for (month in 1..12) {
+                tempBalance += monthlyDeposit
+                val monthlyInterestEarned = tempBalance * monthlyRate
+                tempBalance += monthlyInterestEarned
+                yearlyInterest += monthlyInterestEarned
+            }
+            
+            currentBalance = tempBalance
+            val cumulativeInterest = currentBalance - cumulativeDeposits
+            
+            yearWiseData.add(
+                RDYearData(
+                    year = year,
+                    openingBalance = yearOpeningBalance,
+                    totalDeposits = yearlyDeposits,
+                    interestEarned = yearlyInterest,
+                    closingBalance = currentBalance,
+                    cumulativeDeposits = cumulativeDeposits,
+                    cumulativeInterest = cumulativeInterest
+                )
+            )
+        }
+        
+        return RDResult(
+            monthlyDeposit = monthlyDeposit,
+            interestRate = interestRate,
+            tenure = tenure,
+            maturityAmount = maturityAmount,
+            totalDeposits = totalDeposits,
+            totalInterest = totalInterest,
+            yearWiseData = yearWiseData
+        )
+    }
+    
+    fun calculatePPF(
+        yearlyDeposit: Double,
+        interestRate: Double = 7.1
+    ): PPFResult {
+        val ppfRate = interestRate
+        val tenure = 15 // PPF is always 15 years
+        
+        val yearWiseData = mutableListOf<PPFYearData>()
+        var currentBalance = 0.0
+        var cumulativeDeposits = 0.0
+        
+        for (year in 1..tenure) {
+            val yearOpeningBalance = currentBalance
+            currentBalance += yearlyDeposit
+            cumulativeDeposits += yearlyDeposit
+            
+            // Calculate interest on year-end balance
+            val interestEarned = currentBalance * ppfRate / 100
+            currentBalance += interestEarned
+            
+            val cumulativeInterest = currentBalance - cumulativeDeposits
+            
+            yearWiseData.add(
+                PPFYearData(
+                    year = year,
+                    openingBalance = yearOpeningBalance,
+                    deposit = yearlyDeposit,
+                    interestEarned = interestEarned,
+                    closingBalance = currentBalance,
+                    cumulativeDeposits = cumulativeDeposits,
+                    cumulativeInterest = cumulativeInterest
+                )
+            )
+        }
+        
+        val totalDeposits = yearlyDeposit * tenure
+        val totalInterest = currentBalance - totalDeposits
+        
+        return PPFResult(
+            yearlyDeposit = yearlyDeposit,
+            interestRate = interestRate,
+            tenure = tenure,
+            maturityAmount = currentBalance,
+            totalDeposits = totalDeposits,
+            totalInterest = totalInterest,
+            yearWiseData = yearWiseData
+        )
+    }
+    
+    fun calculateFD(
+        principal: Double,
+        interestRate: Double,
+        tenure: Int, // in months
+        isCompoundInterest: Boolean = true
+    ): FDResult {
+        val maturityAmount = if (isCompoundInterest) {
+            // Quarterly compounding for FD
+            val quarterlyRate = interestRate / 4 / 100
+            val quarters = tenure / 3.0
+            principal * (1 + quarterlyRate).pow(quarters)
+        } else {
+            // Simple interest
+            principal * (1 + (interestRate * tenure / 12) / 100)
+        }
+        
+        val totalInterest = maturityAmount - principal
+        val monthlyInterest = totalInterest / tenure
+        
+        return FDResult(
+            principal = principal,
+            interestRate = interestRate,
+            tenure = tenure,
+            maturityAmount = maturityAmount,
+            totalInterest = totalInterest,
+            monthlyInterest = monthlyInterest,
+            isCompoundInterest = isCompoundInterest
+        )
+    }
 }

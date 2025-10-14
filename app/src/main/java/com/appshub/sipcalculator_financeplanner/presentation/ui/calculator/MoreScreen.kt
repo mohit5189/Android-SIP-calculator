@@ -18,7 +18,11 @@ import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
 
 enum class MoreCalculatorType {
     SIMPLE_INTEREST,
-    COMPOUND_INTEREST
+    COMPOUND_INTEREST,
+    EMI,
+    RD,
+    PPF,
+    FD
 }
 
 @Composable
@@ -49,6 +53,46 @@ fun MoreScreen(
                 }
             )
         }
+        MoreCalculatorType.EMI -> {
+            EMICalculatorScreen(
+                analyticsManager = analyticsManager,
+                modifier = modifier,
+                onBackClick = {
+                    selectedCalculator = null
+                    analyticsManager?.logButtonClick("back_to_more_screen", "EMICalculatorScreen")
+                }
+            )
+        }
+        MoreCalculatorType.RD -> {
+            RDCalculatorScreen(
+                analyticsManager = analyticsManager,
+                modifier = modifier,
+                onBackClick = {
+                    selectedCalculator = null
+                    analyticsManager?.logButtonClick("back_to_more_screen", "RDCalculatorScreen")
+                }
+            )
+        }
+        MoreCalculatorType.PPF -> {
+            PPFCalculatorScreen(
+                analyticsManager = analyticsManager,
+                modifier = modifier,
+                onBackClick = {
+                    selectedCalculator = null
+                    analyticsManager?.logButtonClick("back_to_more_screen", "PPFCalculatorScreen")
+                }
+            )
+        }
+        MoreCalculatorType.FD -> {
+            FDCalculatorScreen(
+                analyticsManager = analyticsManager,
+                modifier = modifier,
+                onBackClick = {
+                    selectedCalculator = null
+                    analyticsManager?.logButtonClick("back_to_more_screen", "FDCalculatorScreen")
+                }
+            )
+        }
         null -> {
             MoreMainScreen(
                 onCalculatorSelected = { type ->
@@ -57,10 +101,18 @@ fun MoreScreen(
                         when (type) {
                             MoreCalculatorType.SIMPLE_INTEREST -> "simple_interest_calculator"
                             MoreCalculatorType.COMPOUND_INTEREST -> "compound_interest_calculator"
+                            MoreCalculatorType.EMI -> "emi_calculator"
+                            MoreCalculatorType.RD -> "rd_calculator"
+                            MoreCalculatorType.PPF -> "ppf_calculator"
+                            MoreCalculatorType.FD -> "fd_calculator"
                         },
                         when (type) {
                             MoreCalculatorType.SIMPLE_INTEREST -> "SimpleInterestScreen"
                             MoreCalculatorType.COMPOUND_INTEREST -> "CompoundInterestScreen"
+                            MoreCalculatorType.EMI -> "EMICalculatorScreen"
+                            MoreCalculatorType.RD -> "RDCalculatorScreen"
+                            MoreCalculatorType.PPF -> "PPFCalculatorScreen"
+                            MoreCalculatorType.FD -> "FDCalculatorScreen"
                         }
                     )
                 },
@@ -91,11 +143,6 @@ fun MoreMainScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "More Calculators",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
         
         CalculatorOptionCard(
             title = "Simple Interest Calculator",
@@ -117,30 +164,45 @@ fun MoreMainScreen(
             }
         )
         
-        // Placeholder for future calculators
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "More calculators coming soon!",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "We're working on adding more financial calculators to help with your planning needs.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        CalculatorOptionCard(
+            title = "EMI Calculator",
+            description = "Calculate equated monthly installments for loans with detailed payment breakdown",
+            icon = Icons.Default.Calculate,
+            onClick = {
+                analyticsManager?.logButtonClick("emi_selected", "MoreScreen")
+                onCalculatorSelected(MoreCalculatorType.EMI)
             }
-        }
+        )
+        
+        CalculatorOptionCard(
+            title = "RD Calculator",
+            description = "Calculate recurring deposit maturity amount with monthly deposit planning",
+            icon = Icons.Default.TrendingUp,
+            onClick = {
+                analyticsManager?.logButtonClick("rd_selected", "MoreScreen")
+                onCalculatorSelected(MoreCalculatorType.RD)
+            }
+        )
+        
+        CalculatorOptionCard(
+            title = "PPF Calculator",
+            description = "Calculate Public Provident Fund returns with 15-year tenure and tax benefits",
+            icon = Icons.Default.Calculate,
+            onClick = {
+                analyticsManager?.logButtonClick("ppf_selected", "MoreScreen")
+                onCalculatorSelected(MoreCalculatorType.PPF)
+            }
+        )
+        
+        CalculatorOptionCard(
+            title = "FD Calculator",
+            description = "Calculate fixed deposit maturity with simple or compound interest options",
+            icon = Icons.Default.TrendingUp,
+            onClick = {
+                analyticsManager?.logButtonClick("fd_selected", "MoreScreen")
+                onCalculatorSelected(MoreCalculatorType.FD)
+            }
+        )
     }
 }
 

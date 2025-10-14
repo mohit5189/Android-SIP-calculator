@@ -15,8 +15,8 @@ android {
         applicationId = "com.appshub.sipcalculator_financeplanner"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.3"
+        versionCode = 8
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -62,8 +62,8 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-crashlytics")
     
-    // Google Mobile Ads SDK (AdMob)
-    implementation("com.google.android.gms:play-services-ads:23.5.0")
+    // Google Mobile Ads SDK (AdMob) - Updated for Families Policy Compliance
+    implementation("com.google.android.gms:play-services-ads:23.6.0")
     
     // Core Android
     implementation("androidx.core:core-ktx:1.13.1")

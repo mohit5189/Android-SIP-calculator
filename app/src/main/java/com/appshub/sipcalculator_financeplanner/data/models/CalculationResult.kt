@@ -98,6 +98,86 @@ data class CompoundInterestYearData(
     val cumulativeInterest: Double
 )
 
+data class EMIResult(
+    val loanAmount: Double,
+    val interestRate: Double,
+    val loanTenure: Int, // in months
+    val emi: Double,
+    val totalAmount: Double,
+    val totalInterest: Double,
+    val yearWiseData: List<EMIYearData>
+)
+
+data class EMIYearData(
+    val year: Int,
+    val openingBalance: Double,
+    val totalPayment: Double,
+    val principalPayment: Double,
+    val interestPayment: Double,
+    val closingBalance: Double,
+    val monthlyData: List<EMIMonthData>
+)
+
+data class EMIMonthData(
+    val month: Int,
+    val monthName: String,
+    val openingBalance: Double,
+    val emi: Double,
+    val principalPayment: Double,
+    val interestPayment: Double,
+    val closingBalance: Double
+)
+
+data class RDResult(
+    val monthlyDeposit: Double,
+    val interestRate: Double,
+    val tenure: Int, // in years
+    val maturityAmount: Double,
+    val totalDeposits: Double,
+    val totalInterest: Double,
+    val yearWiseData: List<RDYearData>
+)
+
+data class RDYearData(
+    val year: Int,
+    val openingBalance: Double,
+    val totalDeposits: Double,
+    val interestEarned: Double,
+    val closingBalance: Double,
+    val cumulativeDeposits: Double,
+    val cumulativeInterest: Double
+)
+
+data class PPFResult(
+    val yearlyDeposit: Double,
+    val interestRate: Double,
+    val tenure: Int, // fixed 15 years for PPF
+    val maturityAmount: Double,
+    val totalDeposits: Double,
+    val totalInterest: Double,
+    val yearWiseData: List<PPFYearData>
+)
+
+data class PPFYearData(
+    val year: Int,
+    val openingBalance: Double,
+    val deposit: Double,
+    val interestEarned: Double,
+    val closingBalance: Double,
+    val cumulativeDeposits: Double,
+    val cumulativeInterest: Double
+)
+
+data class FDResult(
+    val principal: Double,
+    val interestRate: Double,
+    val tenure: Int, // in months
+    val maturityAmount: Double,
+    val totalInterest: Double,
+    val monthlyInterest: Double,
+    val isCompoundInterest: Boolean
+)
+
 enum class CalculationType {
-    SIP, SWP, GOAL, SIMPLE_INTEREST, COMPOUND_INTEREST
+    SIP, SWP, GOAL, SIMPLE_INTEREST, COMPOUND_INTEREST, EMI, RD, PPF, FD
 }
