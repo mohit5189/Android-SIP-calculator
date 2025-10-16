@@ -58,6 +58,13 @@ fun SWPCalculatorMainScreen(
 ) {
     val scrollState = rememberScrollState()
     
+    // Watch for when calculation completes and trigger breakdown
+    LaunchedEffect(uiState.result) {
+        if (uiState.result != null && !uiState.isCalculating) {
+            viewModel.showDetailedBreakdown()
+        }
+    }
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -208,29 +215,30 @@ fun SWPDetailedBreakdownScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.fillMaxSize()
+    androidx.compose.foundation.lazy.LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Top App Bar
-        TopAppBar(
-            title = { Text("SWP Breakdown") },
-            navigationIcon = {
-                IconButton(onClick = onBackClick) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            // Back button
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        )
-        
-        androidx.compose.foundation.lazy.LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+            }
+            
             // Summary Card
             item {
                 SWPSummaryCard(swpResult)
@@ -278,7 +286,6 @@ fun SWPDetailedBreakdownScreen(
                 SWPYearCard(yearData = yearData)
             }
         }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -61,30 +61,31 @@ fun SimpleInterestMainScreen(
     val adManager = AdManager.getInstance()
     
     Column(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Top App Bar with back button (only show if onBackClick is provided)
+        // Back button
         if (onBackClick != null) {
-            TopAppBar(
-                title = { Text("Simple Interest Calculator") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
-            )
+            }
         }
         
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
         // Input Fields
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -173,7 +174,6 @@ fun SimpleInterestMainScreen(
                     viewModel.showDetailedBreakdown()
                 }
             )
-        }
         }
     }
 }

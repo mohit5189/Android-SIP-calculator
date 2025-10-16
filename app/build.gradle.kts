@@ -15,8 +15,8 @@ android {
         applicationId = "com.appshub.sipcalculator_financeplanner"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.4"
+        versionCode = 9
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -25,12 +25,21 @@ android {
     }
 
     buildTypes {
+        debug {
+            isDebuggable = true
+            // Disable Firebase Analytics for debug builds
+            manifestPlaceholders["firebase_analytics_collection_enabled"] = false
+            manifestPlaceholders["firebase_analytics_collection_deactivated"] = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Enable Firebase Analytics for release builds
+            manifestPlaceholders["firebase_analytics_collection_enabled"] = true
+            manifestPlaceholders["firebase_analytics_collection_deactivated"] = false
         }
     }
     compileOptions {

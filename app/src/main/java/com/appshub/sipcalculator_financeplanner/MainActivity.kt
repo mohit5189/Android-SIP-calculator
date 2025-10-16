@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -17,6 +18,7 @@ import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.SIPCa
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.SWPCalculatorScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.GoalCalculatorScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.MoreScreen
+import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.MoreCalculatorType
 import com.appshub.sipcalculator_financeplanner.presentation.ui.screens.MoreAppsScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.RatingDialog
 import com.appshub.sipcalculator_financeplanner.ui.theme.SIPCalculatorFInancePlannerTheme
@@ -71,6 +73,18 @@ fun SIPCalculatorApp() {
     var showMoreApps by remember { mutableStateOf(false) }
     var showRatingDialog by remember { mutableStateOf(false) }
     var isRatingEligible by remember { mutableStateOf(false) }
+    var moreScreenState by remember { mutableStateOf<MoreCalculatorType?>(null) }
+    
+    // Dynamic title based on current screen
+    val currentTitle = when (moreScreenState) {
+        MoreCalculatorType.SIMPLE_INTEREST -> "Simple Interest"
+        MoreCalculatorType.COMPOUND_INTEREST -> "Compound Interest"
+        MoreCalculatorType.EMI -> "EMI Calculator"
+        MoreCalculatorType.RD -> "RD Calculator"
+        MoreCalculatorType.PPF -> "PPF Calculator"
+        MoreCalculatorType.FD -> "FD Calculator"
+        null -> listOf("SIP Calculator", "SWP Calculator", "Goal Planning", "More")[selectedCalculator]
+    }
     
     val calculatorTitles = listOf(
         "SIP Calculator",
@@ -132,40 +146,62 @@ fun SIPCalculatorApp() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(calculatorTitles[selectedCalculator]) },
+                title = { Text(currentTitle) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 actions = {
-                    // Rate Us button (only show if eligible)
-                    if (isRatingEligible) {
-                        IconButton(
-                            onClick = { 
-                                showRatingDialog = true
-                                analyticsManager.logButtonClick("rate_us_header", "MainActivity")
-                            }
-                        ) {
+                    var showMenu by remember { mutableStateOf(false) }
+                    
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
                             Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "Rate Us",
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "More options",
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
-                    }
-                    
-                    // More Apps button
-                    IconButton(
-                        onClick = { 
-                            showMoreApps = true
-                            analyticsManager.logButtonClick("more_apps_header", "MainActivity")
+                        
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            // Rate Us option (only show if eligible)
+                            if (isRatingEligible) {
+                                DropdownMenuItem(
+                                    text = { Text("Rate Us ⭐") },
+                                    onClick = {
+                                        showMenu = false
+                                        showRatingDialog = true
+                                        analyticsManager.logButtonClick("rate_us_menu", "MainActivity")
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Star,
+                                            contentDescription = null
+                                        )
+                                    }
+                                )
+                            }
+                            
+                            // More Apps option
+                            DropdownMenuItem(
+                                text = { Text("More Apps") },
+                                onClick = {
+                                    showMenu = false
+                                    showMoreApps = true
+                                    analyticsManager.logButtonClick("more_apps_menu", "MainActivity")
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Apps,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Apps,
-                            contentDescription = "More Apps",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
                     }
                 }
             )
@@ -221,7 +257,11 @@ fun SIPCalculatorApp() {
                 0 -> SIPCalculatorScreen(analyticsManager)
                 1 -> SWPCalculatorScreen(analyticsManager)
                 2 -> GoalCalculatorScreen(analyticsManager)
-                3 -> MoreScreen(analyticsManager)
+                3 -> MoreScreen(
+                    analyticsManager = analyticsManager,
+                    currentCalculator = moreScreenState,
+                    onCalculatorChanged = { type -> moreScreenState = type }
+                )
             }
         }
     }

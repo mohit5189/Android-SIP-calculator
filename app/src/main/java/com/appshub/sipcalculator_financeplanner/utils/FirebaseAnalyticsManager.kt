@@ -1,14 +1,37 @@
 package com.appshub.sipcalculator_financeplanner.utils
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
 
-class FirebaseAnalyticsManager private constructor(context: Context) {
+class FirebaseAnalyticsManager private constructor(private val context: Context) {
     
     private val firebaseAnalytics: FirebaseAnalytics = FirebaseAnalytics.getInstance(context)
+    private val isAnalyticsEnabled = !isDebugBuild()
+    
+    init {
+        // Disable analytics collection for debug builds
+        firebaseAnalytics.setAnalyticsCollectionEnabled(isAnalyticsEnabled)
+        
+        if (!isAnalyticsEnabled) {
+            // Additional settings to ensure no data is sent in debug builds
+            firebaseAnalytics.setSessionTimeoutDuration(0)
+            firebaseAnalytics.setUserId(null)
+            firebaseAnalytics.resetAnalyticsData()
+            Log.d(TAG, "Firebase Analytics DISABLED for debug build")
+        } else {
+            Log.d(TAG, "Firebase Analytics ENABLED for release build")
+        }
+    }
+    
+    private fun isDebugBuild(): Boolean {
+        return (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+    }
     
     companion object {
+        private const val TAG = "FirebaseAnalytics"
         @Volatile
         private var INSTANCE: FirebaseAnalyticsManager? = null
         
@@ -21,6 +44,10 @@ class FirebaseAnalyticsManager private constructor(context: Context) {
     
     // Screen View Events
     fun logScreenView(screenName: String, screenClass: String? = null) {
+        if (!isAnalyticsEnabled) {
+            Log.d(TAG, "Analytics disabled - Skipping screen view: $screenName")
+            return
+        }
         val bundle = Bundle().apply {
             putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
             screenClass?.let { putString(FirebaseAnalytics.Param.SCREEN_CLASS, it) }
@@ -35,6 +62,7 @@ class FirebaseAnalyticsManager private constructor(context: Context) {
         timePeriod: Int,
         maturityAmount: Double
     ) {
+        if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             putDouble("monthly_investment", monthlyInvestment)
             putDouble("expected_return", expectedReturn)
@@ -51,6 +79,7 @@ class FirebaseAnalyticsManager private constructor(context: Context) {
         expectedReturn: Double,
         timePeriod: Int
     ) {
+        if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             putDouble("initial_investment", initialInvestment)
             putDouble("monthly_withdrawal", monthlyWithdrawal)
@@ -68,6 +97,7 @@ class FirebaseAnalyticsManager private constructor(context: Context) {
         expectedReturn: Double,
         monthlyInvestmentRequired: Double
     ) {
+        if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             putDouble("goal_amount", goalAmount)
             putInt("current_age", currentAge)
@@ -80,6 +110,10 @@ class FirebaseAnalyticsManager private constructor(context: Context) {
     
     // Button Click Events
     fun logButtonClick(buttonName: String, screenName: String) {
+        if (!isAnalyticsEnabled) {
+            Log.d(TAG, "Analytics disabled - Skipping button click: $buttonName on $screenName")
+            return
+        }
         val bundle = Bundle().apply {
             putString("button_name", buttonName)
             putString("screen_name", screenName)
@@ -89,6 +123,7 @@ class FirebaseAnalyticsManager private constructor(context: Context) {
     
     // Navigation Events
     fun logNavigation(fromScreen: String, toScreen: String) {
+        if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             putString("from_screen", fromScreen)
             putString("to_screen", toScreen)
@@ -98,6 +133,7 @@ class FirebaseAnalyticsManager private constructor(context: Context) {
     
     // Generic Custom Event
     fun logCustomEvent(eventName: String, parameters: Map<String, Any>) {
+        if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             parameters.forEach { (key, value) ->
                 when (value) {
@@ -112,5 +148,10 @@ class FirebaseAnalyticsManager private constructor(context: Context) {
             }
         }
         firebaseAnalytics.logEvent(eventName, bundle)
+    }
+    
+    // Debug utility to check if analytics is enabled
+    fun getAnalyticsStatus(): Boolean {
+        return isAnalyticsEnabled
     }
 }

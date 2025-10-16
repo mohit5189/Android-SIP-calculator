@@ -28,9 +28,12 @@ enum class MoreCalculatorType {
 @Composable
 fun MoreScreen(
     analyticsManager: FirebaseAnalyticsManager? = null,
+    currentCalculator: MoreCalculatorType? = null,
+    onCalculatorChanged: (MoreCalculatorType?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var selectedCalculator by remember { mutableStateOf<MoreCalculatorType?>(null) }
+    // Use external state instead of local state
+    val selectedCalculator = currentCalculator
     
     when (selectedCalculator) {
         MoreCalculatorType.SIMPLE_INTEREST -> {
@@ -38,7 +41,7 @@ fun MoreScreen(
                 analyticsManager = analyticsManager,
                 modifier = modifier,
                 onBackClick = {
-                    selectedCalculator = null
+                    onCalculatorChanged(null)
                     analyticsManager?.logButtonClick("back_to_more_screen", "SimpleInterestScreen")
                 }
             )
@@ -48,7 +51,7 @@ fun MoreScreen(
                 analyticsManager = analyticsManager,
                 modifier = modifier,
                 onBackClick = {
-                    selectedCalculator = null
+                    onCalculatorChanged(null)
                     analyticsManager?.logButtonClick("back_to_more_screen", "CompoundInterestScreen")
                 }
             )
@@ -58,7 +61,7 @@ fun MoreScreen(
                 analyticsManager = analyticsManager,
                 modifier = modifier,
                 onBackClick = {
-                    selectedCalculator = null
+                    onCalculatorChanged(null)
                     analyticsManager?.logButtonClick("back_to_more_screen", "EMICalculatorScreen")
                 }
             )
@@ -68,7 +71,7 @@ fun MoreScreen(
                 analyticsManager = analyticsManager,
                 modifier = modifier,
                 onBackClick = {
-                    selectedCalculator = null
+                    onCalculatorChanged(null)
                     analyticsManager?.logButtonClick("back_to_more_screen", "RDCalculatorScreen")
                 }
             )
@@ -78,7 +81,7 @@ fun MoreScreen(
                 analyticsManager = analyticsManager,
                 modifier = modifier,
                 onBackClick = {
-                    selectedCalculator = null
+                    onCalculatorChanged(null)
                     analyticsManager?.logButtonClick("back_to_more_screen", "PPFCalculatorScreen")
                 }
             )
@@ -88,7 +91,7 @@ fun MoreScreen(
                 analyticsManager = analyticsManager,
                 modifier = modifier,
                 onBackClick = {
-                    selectedCalculator = null
+                    onCalculatorChanged(null)
                     analyticsManager?.logButtonClick("back_to_more_screen", "FDCalculatorScreen")
                 }
             )
@@ -96,7 +99,7 @@ fun MoreScreen(
         null -> {
             MoreMainScreen(
                 onCalculatorSelected = { type ->
-                    selectedCalculator = type
+                    onCalculatorChanged(type)
                     analyticsManager?.logScreenView(
                         when (type) {
                             MoreCalculatorType.SIMPLE_INTEREST -> "simple_interest_calculator"
@@ -119,13 +122,6 @@ fun MoreScreen(
                 analyticsManager = analyticsManager,
                 modifier = modifier
             )
-        }
-    }
-    
-    // Handle back navigation by resetting to main screen
-    LaunchedEffect(selectedCalculator) {
-        if (selectedCalculator != null) {
-            // You can add back navigation logic here if needed
         }
     }
 }
