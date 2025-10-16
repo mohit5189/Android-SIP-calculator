@@ -28,15 +28,37 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        // Initialize managers
-        RatingManager.getInstance().initialize(this)
-        AdManager.getInstance().initializeAds(this)
-        
+        // Initialize UI first to prevent splash screen hanging
         setContent {
             SIPCalculatorFInancePlannerTheme {
                 SIPCalculatorApp()
             }
         }
+        
+        // Initialize managers asynchronously to prevent blocking main thread
+        initializeManagersAsync()
+    }
+    
+    private fun initializeManagersAsync() {
+        // Use a separate thread for initialization to prevent main thread blocking
+        Thread {
+            try {
+                // Initialize rating manager (lightweight)
+                RatingManager.getInstance().initialize(this)
+                
+                // Initialize ads on main thread (required by AdMob)
+                runOnUiThread {
+                    try {
+                        AdManager.getInstance().initializeAds(this)
+                    } catch (e: Exception) {
+                        // Graceful fallback if ads fail to initialize
+                        android.util.Log.e("MainActivity", "Failed to initialize ads: ${e.message}")
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Failed to initialize managers: ${e.message}")
+            }
+        }.start()
     }
 }
 
@@ -48,6 +70,7 @@ fun SIPCalculatorApp() {
     var selectedCalculator by remember { mutableStateOf(0) }
     var showMoreApps by remember { mutableStateOf(false) }
     var showRatingDialog by remember { mutableStateOf(false) }
+    var isRatingEligible by remember { mutableStateOf(false) }
     
     val calculatorTitles = listOf(
         "SIP Calculator",
@@ -85,10 +108,17 @@ fun SIPCalculatorApp() {
         return
     }
     
-    // Show rating dialog if eligible
+    // Check rating eligibility with delay to ensure app is fully loaded
     LaunchedEffect(Unit) {
-        if (RatingManager.getInstance().isEligibleToShowRating()) {
-            showRatingDialog = true
+        kotlinx.coroutines.delay(2000) // Wait 2 seconds after app starts
+        try {
+            isRatingEligible = RatingManager.getInstance().isEligibleToShowRating()
+            if (isRatingEligible) {
+                showRatingDialog = true
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error checking rating eligibility: ${e.message}")
+            isRatingEligible = false
         }
     }
     
@@ -109,7 +139,7 @@ fun SIPCalculatorApp() {
                 ),
                 actions = {
                     // Rate Us button (only show if eligible)
-                    if (RatingManager.getInstance().isEligibleToShowRating()) {
+                    if (isRatingEligible) {
                         IconButton(
                             onClick = { 
                                 showRatingDialog = true

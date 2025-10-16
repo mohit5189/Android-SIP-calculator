@@ -26,33 +26,54 @@ class RatingManager private constructor() {
         }
     }
     
+    @Volatile
     private var sharedPreferences: SharedPreferences? = null
     
+    @Volatile
+    private var isInitialized = false
+    
     fun initialize(context: Context) {
-        sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        
-        // Set first launch time if not already set
-        if (getFirstLaunchTime() == 0L) {
-            setFirstLaunchTime(System.currentTimeMillis())
+        try {
+            sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            
+            // Set first launch time if not already set
+            if (getFirstLaunchTime() == 0L) {
+                setFirstLaunchTime(System.currentTimeMillis())
+            }
+            
+            isInitialized = true
+            Log.d(TAG, "RatingManager initialized successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize RatingManager: ${e.message}")
         }
     }
     
     fun isEligibleToShowRating(): Boolean {
-        // Don't show if user has already rated
-        if (hasUserRated()) {
+        // Return false if not initialized to prevent crashes
+        if (!isInitialized || sharedPreferences == null) {
             return false
         }
         
-        // Show rating after 3 days of first launch
-        val firstLaunchTime = getFirstLaunchTime()
-        val threeDaysInMillis = 3 * 24 * 60 * 60 * 1000L
-        val hasUsedAppForThreeDays = (System.currentTimeMillis() - firstLaunchTime) >= threeDaysInMillis
-        
-        // Don't show more than 3 times
-        val promptCount = getRatingPromptCount()
-        val hasNotExceededMaxPrompts = promptCount < 3
-        
-        return hasUsedAppForThreeDays && hasNotExceededMaxPrompts
+        try {
+            // Don't show if user has already rated
+            if (hasUserRated()) {
+                return false
+            }
+            
+            // Show rating after 3 days of first launch
+            val firstLaunchTime = getFirstLaunchTime()
+            val threeDaysInMillis = 3 * 24 * 60 * 60 * 1000L
+            val hasUsedAppForThreeDays = (System.currentTimeMillis() - firstLaunchTime) >= threeDaysInMillis
+            
+            // Don't show more than 3 times
+            val promptCount = getRatingPromptCount()
+            val hasNotExceededMaxPrompts = promptCount < 3
+            
+            return hasUsedAppForThreeDays && hasNotExceededMaxPrompts
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking rating eligibility: ${e.message}")
+            return false
+        }
     }
     
     fun showRatingDialog(context: Context) {
@@ -84,28 +105,55 @@ class RatingManager private constructor() {
     }
     
     private fun hasUserRated(): Boolean {
-        return sharedPreferences?.getBoolean(KEY_HAS_RATED, false) ?: false
+        return try {
+            sharedPreferences?.getBoolean(KEY_HAS_RATED, false) ?: false
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading has_rated: ${e.message}")
+            false
+        }
     }
     
     private fun markAsRated() {
-        sharedPreferences?.edit()?.putBoolean(KEY_HAS_RATED, true)?.apply()
+        try {
+            sharedPreferences?.edit()?.putBoolean(KEY_HAS_RATED, true)?.apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error marking as rated: ${e.message}")
+        }
     }
     
     private fun getRatingPromptCount(): Int {
-        return sharedPreferences?.getInt(KEY_RATING_PROMPT_COUNT, 0) ?: 0
+        return try {
+            sharedPreferences?.getInt(KEY_RATING_PROMPT_COUNT, 0) ?: 0
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading prompt count: ${e.message}")
+            0
+        }
     }
     
     private fun incrementRatingPromptCount() {
-        val currentCount = getRatingPromptCount()
-        sharedPreferences?.edit()?.putInt(KEY_RATING_PROMPT_COUNT, currentCount + 1)?.apply()
+        try {
+            val currentCount = getRatingPromptCount()
+            sharedPreferences?.edit()?.putInt(KEY_RATING_PROMPT_COUNT, currentCount + 1)?.apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error incrementing prompt count: ${e.message}")
+        }
     }
     
     private fun getFirstLaunchTime(): Long {
-        return sharedPreferences?.getLong(KEY_FIRST_LAUNCH_TIME, 0L) ?: 0L
+        return try {
+            sharedPreferences?.getLong(KEY_FIRST_LAUNCH_TIME, 0L) ?: 0L
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading first launch time: ${e.message}")
+            0L
+        }
     }
     
     private fun setFirstLaunchTime(time: Long) {
-        sharedPreferences?.edit()?.putLong(KEY_FIRST_LAUNCH_TIME, time)?.apply()
+        try {
+            sharedPreferences?.edit()?.putLong(KEY_FIRST_LAUNCH_TIME, time)?.apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting first launch time: ${e.message}")
+        }
     }
     
     // For testing purposes
