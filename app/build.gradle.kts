@@ -54,6 +54,13 @@ android {
             useLegacyPackaging = false
         }
     }
+    
+    // Support for 16 KB memory page sizes (Android 15+)
+    bundle {
+        abi {
+            enableSplit = true
+        }
+    }
 }
 
 dependencies {

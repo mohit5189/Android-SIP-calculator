@@ -3,6 +3,7 @@ package com.appshub.sipcalculator_financeplanner
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -16,11 +17,21 @@ import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.SIPCa
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.SWPCalculatorScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.GoalCalculatorScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.MoreScreen
+import com.appshub.sipcalculator_financeplanner.presentation.ui.screens.MoreAppsScreen
+import com.appshub.sipcalculator_financeplanner.presentation.ui.common.RatingDialog
 import com.appshub.sipcalculator_financeplanner.ui.theme.SIPCalculatorFInancePlannerTheme
 import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.RatingManager
+import com.appshub.sipcalculator_financeplanner.utils.AdManager
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        
+        // Initialize managers
+        RatingManager.getInstance().initialize(this)
+        AdManager.getInstance().initializeAds(this)
+        
         setContent {
             SIPCalculatorFInancePlannerTheme {
                 SIPCalculatorApp()
@@ -35,6 +46,8 @@ fun SIPCalculatorApp() {
     val context = LocalContext.current
     val analyticsManager = FirebaseAnalyticsManager.getInstance(context)
     var selectedCalculator by remember { mutableStateOf(0) }
+    var showMoreApps by remember { mutableStateOf(false) }
+    var showRatingDialog by remember { mutableStateOf(false) }
     
     val calculatorTitles = listOf(
         "SIP Calculator",
@@ -63,6 +76,29 @@ fun SIPCalculatorApp() {
         }
     }
     
+    // Handle More Apps screen
+    if (showMoreApps) {
+        MoreAppsScreen(
+            onBackClick = { showMoreApps = false },
+            analyticsManager = analyticsManager
+        )
+        return
+    }
+    
+    // Show rating dialog if eligible
+    LaunchedEffect(Unit) {
+        if (RatingManager.getInstance().isEligibleToShowRating()) {
+            showRatingDialog = true
+        }
+    }
+    
+    if (showRatingDialog) {
+        RatingDialog(
+            onDismiss = { showRatingDialog = false },
+            onRateUs = { showRatingDialog = false }
+        )
+    }
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -70,7 +106,38 @@ fun SIPCalculatorApp() {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                ),
+                actions = {
+                    // Rate Us button (only show if eligible)
+                    if (RatingManager.getInstance().isEligibleToShowRating()) {
+                        IconButton(
+                            onClick = { 
+                                showRatingDialog = true
+                                analyticsManager.logButtonClick("rate_us_header", "MainActivity")
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Rate Us",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+                    
+                    // More Apps button
+                    IconButton(
+                        onClick = { 
+                            showMoreApps = true
+                            analyticsManager.logButtonClick("more_apps_header", "MainActivity")
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Apps,
+                            contentDescription = "More Apps",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
             )
         },
         bottomBar = {

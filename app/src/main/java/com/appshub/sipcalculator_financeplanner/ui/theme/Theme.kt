@@ -59,8 +59,8 @@ fun SIPCalculatorFInancePlannerTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            // Always use light status bars since we're using light theme
+            // Remove deprecated statusBarColor setting for Android 15 compatibility
+            // EdgeToEdge handles status bar appearance automatically
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
         }
     }
