@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ad-services-config>
+    <!-- Enable Privacy Sandbox ad attribution and reporting -->
+    <attribution-config>
+        <attribution-data-collection enabled="true" />
+    </attribution-config>
+    
+    <!-- Configure measurement and reporting -->
+    <measurement-config>
+        <measurement-data-collection enabled="true" />
+    </measurement-config>
+</ad-services-config>

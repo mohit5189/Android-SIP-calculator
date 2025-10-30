@@ -58,13 +58,6 @@ fun SWPCalculatorMainScreen(
 ) {
     val scrollState = rememberScrollState()
     
-    // Watch for when calculation completes and trigger breakdown
-    LaunchedEffect(uiState.result) {
-        if (uiState.result != null && !uiState.isCalculating) {
-            viewModel.showDetailedBreakdown()
-        }
-    }
-    
     Column(
         modifier = modifier
             .fillMaxSize()

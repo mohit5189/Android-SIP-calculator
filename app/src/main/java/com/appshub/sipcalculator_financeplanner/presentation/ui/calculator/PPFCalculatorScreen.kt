@@ -3,6 +3,7 @@ package com.appshub.sipcalculator_financeplanner.presentation.ui.calculator
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
@@ -12,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.appshub.sipcalculator_financeplanner.data.models.PPFResult
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.InputCard
@@ -105,6 +107,7 @@ fun PPFCalculatorScreen(
                     label = { Text("Yearly Deposit (₹500 - ₹1,50,000)") },
                     placeholder = { Text("₹1,50,000") },
                     modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
                 
@@ -114,6 +117,7 @@ fun PPFCalculatorScreen(
                     label = { Text("Interest Rate (% per annum)") },
                     placeholder = { Text("7.1") },
                     modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
                 

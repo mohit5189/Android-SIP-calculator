@@ -15,12 +15,17 @@ android {
         applicationId = "com.appshub.sipcalculator_financeplanner"
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "1.5"
+        versionCode = 17
+        versionName = "1.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+        
+        // Enable support for 16 KB page sizes
+        ndk {
+            debugSymbolLevel = "SYMBOL_TABLE"
         }
     }
 
@@ -70,6 +75,9 @@ android {
             enableSplit = true
         }
     }
+    
+    // NDK configuration for 16 KB page size support
+    ndkVersion = "26.1.10909125"
 }
 
 dependencies {

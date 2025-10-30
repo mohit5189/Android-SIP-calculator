@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
@@ -39,16 +40,16 @@ fun MoreAppsScreen(
 ) {
     val context = LocalContext.current
     
-    // App information - in future this can come from a server or local database
+    // Real app information
     val apps = remember {
         listOf(
             AppInfo(
-                name = "ExpanseDiary - Expense Tracker",
+                name = "Expense Diary",
                 packageName = "apps.mohit.com.expansediary",
-                description = "Smart expense tracking with categories, budgets, and detailed financial insights. Track your spending habits effortlessly.",
-                iconUrl = "https://play-lh.googleusercontent.com/your-app-icon-url", // Replace with actual icon URL
-                rating = 4.5f,
-                downloads = "1K+"
+                description = "SIMPLE expense tracking app. Track your daily expenses, categorize spending, and maintain your budget with an intuitive and clean interface.",
+                iconUrl = "", // Will use emoji instead
+                rating = 4.3f,
+                downloads = "5K+"
             )
         )
     }
@@ -114,29 +115,97 @@ fun MoreAppsScreen(
                 )
             }
             
-            // Future apps placeholder
+            // Future apps placeholder - Stylish design
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
                 ) {
-                    Text(
-                        text = "🚀 More Apps Coming Soon!",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "We're working on more amazing apps to help you manage your finances and daily life better.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Animated emoji stack
+                        Box(
+                            modifier = Modifier.size(80.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Card(
+                                modifier = Modifier.size(72.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                ),
+                                shape = RoundedCornerShape(36.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "🚀",
+                                        style = MaterialTheme.typography.headlineLarge,
+                                        fontSize = MaterialTheme.typography.headlineLarge.fontSize * 1.5f
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Main title
+                        Text(
+                            text = "More Apps Coming Soon!",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        
+                        // Description
+                        Text(
+                            text = "We're crafting innovative tools to enhance your financial journey. Stay tuned for productivity apps, budget planners, and investment trackers!",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.2f
+                        )
+                        
+                        // Feature chips
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            listOf("📊 Analytics", "🎯 Goals", "💡 Insights").forEach { feature ->
+                                SuggestionChip(
+                                    onClick = { },
+                                    label = { 
+                                        Text(
+                                            text = feature,
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                    },
+                                    colors = SuggestionChipDefaults.suggestionChipColors(
+                                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                        labelColor = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                            }
+                        }
+                        
+                        // Call to action
+                        Text(
+                            text = "Follow us for updates! 💙",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             }
         }
@@ -160,21 +229,23 @@ fun AppCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // App Icon Placeholder (since we can't easily load external images in this context)
+            // App Icon for ExpenseDiary
             Card(
                 modifier = Modifier.size(56.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color(0xFF4CAF50) // Green background for expense app
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "💰",
-                        style = MaterialTheme.typography.headlineMedium
+                        text = "📊", // Chart emoji for expense tracking
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontSize = MaterialTheme.typography.headlineMedium.fontSize * 1.2f
                     )
                 }
             }

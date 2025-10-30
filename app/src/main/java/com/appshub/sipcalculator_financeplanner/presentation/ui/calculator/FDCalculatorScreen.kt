@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -12,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.appshub.sipcalculator_financeplanner.data.models.FDResult
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.InputCard
@@ -74,6 +76,7 @@ fun FDCalculatorScreen(
                     label = { Text("Principal Amount") },
                     placeholder = { Text("₹1,00,000") },
                     modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
                 
@@ -83,6 +86,7 @@ fun FDCalculatorScreen(
                     label = { Text("Interest Rate (% per annum)") },
                     placeholder = { Text("6.5") },
                     modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
                 
@@ -92,6 +96,7 @@ fun FDCalculatorScreen(
                     label = { Text("Tenure (months)") },
                     placeholder = { Text("12") },
                     modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
                 
