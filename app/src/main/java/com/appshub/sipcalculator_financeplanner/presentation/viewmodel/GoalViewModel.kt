@@ -12,6 +12,7 @@ import java.util.*
 
 data class GoalUiState(
     val goals: List<Goal> = emptyList(),
+    val goalsProgress: Map<String, GoalProgress> = emptyMap(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val selectedGoal: Goal? = null,
@@ -31,9 +32,18 @@ class GoalViewModel(private val repository: GoalRepository) : ViewModel() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                repository.getActiveGoals().collect { goals ->
+                repository.getAllGoals().collect { goals ->
+                    // Load progress for each goal
+                    val progressMap = mutableMapOf<String, GoalProgress>()
+                    goals.forEach { goal ->
+                        repository.getGoalProgress(goal.goalId)?.let { progress ->
+                            progressMap[goal.goalId] = progress
+                        }
+                    }
+                    
                     _uiState.value = _uiState.value.copy(
                         goals = goals,
+                        goalsProgress = progressMap,
                         isLoading = false,
                         error = null
                     )

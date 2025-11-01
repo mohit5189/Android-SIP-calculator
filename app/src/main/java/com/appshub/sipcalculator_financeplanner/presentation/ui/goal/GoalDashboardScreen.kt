@@ -75,7 +75,9 @@ fun GoalDashboardScreen(
     }
     
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -163,7 +165,7 @@ fun GoalDashboardScreen(
                     )
                     
                     Button(
-                        onClick = { goalViewModel.recordMonthlyProgress(goalId) },
+                        onClick = onManageFinances,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(

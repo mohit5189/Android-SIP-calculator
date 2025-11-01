@@ -1,5 +1,6 @@
 package com.appshub.sipcalculator_financeplanner.presentation.ui.goal
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -79,8 +80,10 @@ fun GoalsListScreen(
             }
         } else {
             items(goalState.goals) { goal ->
+                val progress = goalState.goalsProgress[goal.goalId]
                 GoalCard(
                     goal = goal,
+                    progress = progress,
                     onClick = { onGoalClick(goal.goalId) },
                     onStatusChange = { status ->
                         goalViewModel.updateGoalStatus(goal.goalId, status)
@@ -241,15 +244,14 @@ fun GoalSummaryMetric(
 @Composable
 fun GoalCard(
     goal: Goal,
+    progress: GoalProgress?,
     onClick: () -> Unit,
     onStatusChange: (GoalStatus) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val progress = if (goal.targetAmount > 0) {
-        (goal.currentAmount / goal.targetAmount) * 100
-    } else 0.0
-    
-    val remainingAmount = goal.targetAmount - goal.currentAmount
+    val progressPercentage = progress?.progressPercentage ?: 0.0
+    val currentAmount = progress?.netWorth ?: 0.0
+    val remainingAmount = progress?.remainingAmount ?: goal.targetAmount
     val today = Date()
     val daysRemaining = TimeUnit.MILLISECONDS.toDays(goal.targetDate.time - today.time)
     val isOverdue = daysRemaining < 0
@@ -286,9 +288,12 @@ fun GoalCard(
                     
                     Column {
                         Text(
-                            text = goal.goalName,
+                            text = if (goal.status == GoalStatus.COMPLETED) "✓ ${goal.goalName}" else goal.goalName,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = if (goal.status == GoalStatus.COMPLETED) 
+                                MaterialTheme.colorScheme.primary else 
+                                MaterialTheme.colorScheme.onSurface
                         )
                         
                         Text(
@@ -315,7 +320,7 @@ fun GoalCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "${String.format("%.1f", progress)}% Complete",
+                        text = "${String.format("%.1f", progressPercentage)}% Complete",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -329,12 +334,12 @@ fun GoalCard(
                 }
                 
                 LinearProgressIndicator(
-                    progress = (progress / 100.0).coerceIn(0.0, 1.0).toFloat(),
+                    progress = (progressPercentage / 100.0).coerceIn(0.0, 1.0).toFloat(),
                     modifier = Modifier.fillMaxWidth(),
                     color = when {
                         goal.status == GoalStatus.COMPLETED -> MaterialTheme.colorScheme.primary
-                        progress >= 75 -> Color(0xFF4CAF50)
-                        progress >= 50 -> Color(0xFFFF9800)
+                        progressPercentage >= 75 -> Color(0xFF4CAF50)
+                        progressPercentage >= 50 -> Color(0xFFFF9800)
                         else -> MaterialTheme.colorScheme.primary
                     }
                 )
@@ -344,7 +349,7 @@ fun GoalCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = formatCurrency(goal.currentAmount),
+                        text = formatCurrency(currentAmount),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

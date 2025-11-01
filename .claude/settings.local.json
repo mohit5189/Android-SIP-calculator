@@ -6,7 +6,8 @@
       "Bash(git add:*)",
       "Bash(git push:*)",
       "WebFetch(domain:play.google.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": [],

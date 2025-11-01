@@ -24,6 +24,7 @@ import com.appshub.sipcalculator_financeplanner.presentation.ui.common.RatingDia
 import com.appshub.sipcalculator_financeplanner.presentation.ui.goal.*
 import com.appshub.sipcalculator_financeplanner.data.database.GoalDatabase
 import com.appshub.sipcalculator_financeplanner.data.repository.GoalRepository
+import com.appshub.sipcalculator_financeplanner.data.entity.Goal
 import com.appshub.sipcalculator_financeplanner.di.ViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.appshub.sipcalculator_financeplanner.ui.theme.SIPCalculatorFInancePlannerTheme
@@ -95,6 +96,9 @@ fun SIPCalculatorApp() {
     var pendingGoalResult by remember { mutableStateOf<com.appshub.sipcalculator_financeplanner.data.models.GoalResult?>(null) }
     var selectedGoalId by remember { mutableStateOf<String?>(null) }
     var selectedGoalName by remember { mutableStateOf("") }
+    var financialSetupSource by remember { mutableStateOf<String?>(null) } // "setup" or "manage"
+    var showEditGoal by remember { mutableStateOf(false) }
+    var editingGoal by remember { mutableStateOf<Goal?>(null) }
     
     // Dynamic title based on current screen
     val currentTitle = when (moreScreenState) {
@@ -157,6 +161,7 @@ fun SIPCalculatorApp() {
                 selectedGoalId = goalId
                 showGoalSetup = false
                 showFinancialSetup = true
+                financialSetupSource = "setup"
             },
             goalViewModel = goalViewModel
         )
@@ -168,7 +173,12 @@ fun SIPCalculatorApp() {
             goalId = selectedGoalId!!,
             onBackClick = { 
                 showFinancialSetup = false
-                selectedGoalId = null
+                if (financialSetupSource == "manage") {
+                    showGoalDashboard = true
+                } else {
+                    selectedGoalId = null
+                }
+                financialSetupSource = null
             },
             onSetupComplete = {
                 showFinancialSetup = false
@@ -189,11 +199,16 @@ fun SIPCalculatorApp() {
                 selectedCalculator = 3 // Switch to My Goals tab
             },
             onEditGoal = {
-                // TODO: Implement edit goal functionality
+                // Get current goal and open edit dialog
+                goalViewModel.uiState.value.selectedGoal?.let { goal ->
+                    editingGoal = goal
+                    showEditGoal = true
+                }
             },
             onManageFinances = {
                 showGoalDashboard = false
                 showFinancialSetup = true
+                financialSetupSource = "manage"
             },
             goalViewModel = goalViewModel,
             savingViewModel = savingViewModel,
@@ -382,6 +397,22 @@ fun SIPCalculatorApp() {
                 )
             }
         }
+    }
+    
+    // Edit Goal Dialog
+    if (showEditGoal && editingGoal != null) {
+        EditGoalDialog(
+            goal = editingGoal!!,
+            onDismiss = { 
+                showEditGoal = false
+                editingGoal = null
+            },
+            onSave = { updatedGoal ->
+                goalViewModel.updateGoal(updatedGoal)
+                showEditGoal = false
+                editingGoal = null
+            }
+        )
     }
 }
 

@@ -38,6 +38,8 @@ fun FinancialSetupScreen(
     var selectedTab by remember { mutableStateOf(0) }
     var showAddSavingDialog by remember { mutableStateOf(false) }
     var showAddDebtDialog by remember { mutableStateOf(false) }
+    var savingToDelete by remember { mutableStateOf<Saving?>(null) }
+    var debtToDelete by remember { mutableStateOf<Debt?>(null) }
     
     LaunchedEffect(goalId) {
         savingViewModel.loadSavingsForGoal(goalId)
@@ -133,14 +135,14 @@ fun FinancialSetupScreen(
                 savingState = savingState,
                 onAddSaving = { showAddSavingDialog = true },
                 onEditSaving = { savingViewModel.startEditingSaving(it) },
-                onDeleteSaving = { savingViewModel.deleteSaving(it) },
+                onDeleteSaving = { savingToDelete = it },
                 modifier = Modifier.weight(1f)
             )
             1 -> DebtsTab(
                 debtState = debtState,
                 onAddDebt = { showAddDebtDialog = true },
                 onEditDebt = { debtViewModel.startEditingDebt(it) },
-                onDeleteDebt = { debtViewModel.deleteDebt(it) },
+                onDeleteDebt = { debtToDelete = it },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -214,6 +216,68 @@ fun FinancialSetupScreen(
             onDismiss = { debtViewModel.cancelEditing() },
             onSave = { updatedDebt ->
                 debtViewModel.updateDebt(updatedDebt)
+            }
+        )
+    }
+    
+    // Delete Saving Confirmation Dialog
+    savingToDelete?.let { saving ->
+        AlertDialog(
+            onDismissRequest = { savingToDelete = null },
+            title = { Text("Delete Saving") },
+            text = {
+                Text("Are you sure you want to delete this ${saving.category.getDisplayName().lowercase()} investment of ₹${String.format("%.0f", saving.amount)}?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        savingViewModel.deleteSaving(saving)
+                        savingToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { savingToDelete = null }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Delete Debt Confirmation Dialog
+    debtToDelete?.let { debt ->
+        AlertDialog(
+            onDismissRequest = { debtToDelete = null },
+            title = { Text("Delete Debt") },
+            text = {
+                Text("Are you sure you want to delete this ${debt.debtType.getDisplayName().lowercase()} debt of ₹${String.format("%.0f", debt.amount)}?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        debtViewModel.deleteDebt(debt)
+                        debtToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { debtToDelete = null }
+                ) {
+                    Text("Cancel")
+                }
             }
         )
     }
