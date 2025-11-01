@@ -29,6 +29,7 @@ import com.appshub.sipcalculator_financeplanner.utils.AdManager
 @Composable
 fun GoalCalculatorScreen(
     analyticsManager: com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager? = null,
+    onSetAsGoal: ((com.appshub.sipcalculator_financeplanner.data.models.GoalResult) -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: GoalCalculatorViewModel = viewModel()
 ) {
@@ -37,7 +38,8 @@ fun GoalCalculatorScreen(
     if (uiState.showDetailedBreakdown && uiState.result != null) {
         GoalDetailedBreakdownScreen(
             goalResult = uiState.result!!,
-            onBackClick = { viewModel.hideDetailedBreakdown() }
+            onBackClick = { viewModel.hideDetailedBreakdown() },
+            onSetAsGoal = onSetAsGoal
         )
     } else {
         GoalCalculatorMainScreen(
@@ -204,6 +206,7 @@ fun GoalCalculatorMainScreen(
 fun GoalDetailedBreakdownScreen(
     goalResult: com.appshub.sipcalculator_financeplanner.data.models.GoalResult,
     onBackClick: () -> Unit,
+    onSetAsGoal: ((com.appshub.sipcalculator_financeplanner.data.models.GoalResult) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     androidx.compose.foundation.lazy.LazyColumn(
@@ -233,6 +236,34 @@ fun GoalDetailedBreakdownScreen(
             // Summary Card
             item {
                 GoalSummaryCard(goalResult)
+            }
+            
+            // Set as Goal Button
+            onSetAsGoal?.let { callback ->
+                item {
+                    Button(
+                        onClick = { callback(goalResult) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Flag,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Set as My Goal",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
             
             // Required SIP Card

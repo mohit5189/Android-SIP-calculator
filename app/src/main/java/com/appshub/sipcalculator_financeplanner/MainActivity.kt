@@ -21,6 +21,11 @@ import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.MoreS
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.MoreCalculatorType
 import com.appshub.sipcalculator_financeplanner.presentation.ui.screens.MoreAppsScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.RatingDialog
+import com.appshub.sipcalculator_financeplanner.presentation.ui.goal.*
+import com.appshub.sipcalculator_financeplanner.data.database.GoalDatabase
+import com.appshub.sipcalculator_financeplanner.data.repository.GoalRepository
+import com.appshub.sipcalculator_financeplanner.di.ViewModelFactory
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.appshub.sipcalculator_financeplanner.ui.theme.SIPCalculatorFInancePlannerTheme
 import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
 import com.appshub.sipcalculator_financeplanner.utils.RatingManager
@@ -69,11 +74,27 @@ class MainActivity : ComponentActivity() {
 fun SIPCalculatorApp() {
     val context = LocalContext.current
     val analyticsManager = FirebaseAnalyticsManager.getInstance(context)
+    val viewModelFactory = remember { ViewModelFactory(context) }
+    
+    // Create ViewModels once and reuse them
+    val goalViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalViewModel>(factory = viewModelFactory)
+    val savingViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SavingViewModel>(factory = viewModelFactory)
+    val debtViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.DebtViewModel>(factory = viewModelFactory)
+    val goalHistoryViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalHistoryViewModel>(factory = viewModelFactory)
     var selectedCalculator by remember { mutableStateOf(0) }
     var showMoreApps by remember { mutableStateOf(false) }
     var showRatingDialog by remember { mutableStateOf(false) }
     var isRatingEligible by remember { mutableStateOf(false) }
     var moreScreenState by remember { mutableStateOf<MoreCalculatorType?>(null) }
+    
+    // Goal navigation states
+    var showGoalSetup by remember { mutableStateOf(false) }
+    var showFinancialSetup by remember { mutableStateOf(false) }
+    var showGoalDashboard by remember { mutableStateOf(false) }
+    var showGoalHistory by remember { mutableStateOf(false) }
+    var pendingGoalResult by remember { mutableStateOf<com.appshub.sipcalculator_financeplanner.data.models.GoalResult?>(null) }
+    var selectedGoalId by remember { mutableStateOf<String?>(null) }
+    var selectedGoalName by remember { mutableStateOf("") }
     
     // Dynamic title based on current screen
     val currentTitle = when (moreScreenState) {
@@ -83,13 +104,14 @@ fun SIPCalculatorApp() {
         MoreCalculatorType.RD -> "RD Calculator"
         MoreCalculatorType.PPF -> "PPF Calculator"
         MoreCalculatorType.FD -> "FD Calculator"
-        null -> listOf("SIP Calculator", "SWP Calculator", "Goal Planning", "More")[selectedCalculator]
+        null -> listOf("SIP Calculator", "SWP Calculator", "Goal Planning", "My Goals", "More")[selectedCalculator]
     }
     
     val calculatorTitles = listOf(
         "SIP Calculator",
         "SWP Calculator", 
         "Goal Planning",
+        "My Goals",
         "More"
     )
     
@@ -97,6 +119,7 @@ fun SIPCalculatorApp() {
         "sip_calculator",
         "swp_calculator",
         "goal_calculator",
+        "my_goals",
         "more_calculators"
     )
     
@@ -118,6 +141,76 @@ fun SIPCalculatorApp() {
         MoreAppsScreen(
             onBackClick = { showMoreApps = false },
             analyticsManager = analyticsManager
+        )
+        return
+    }
+    
+    // Handle Goal Setup Flow
+    if (showGoalSetup && pendingGoalResult != null) {
+        GoalSetupScreen(
+            goalResult = pendingGoalResult!!,
+            onBackClick = { 
+                showGoalSetup = false
+                pendingGoalResult = null
+            },
+            onGoalCreated = { goalId ->
+                selectedGoalId = goalId
+                showGoalSetup = false
+                showFinancialSetup = true
+            },
+            goalViewModel = goalViewModel
+        )
+        return
+    }
+    
+    if (showFinancialSetup && selectedGoalId != null) {
+        FinancialSetupScreen(
+            goalId = selectedGoalId!!,
+            onBackClick = { 
+                showFinancialSetup = false
+                selectedGoalId = null
+            },
+            onSetupComplete = {
+                showFinancialSetup = false
+                showGoalDashboard = true
+            },
+            savingViewModel = savingViewModel,
+            debtViewModel = debtViewModel
+        )
+        return
+    }
+    
+    if (showGoalDashboard && selectedGoalId != null) {
+        GoalDashboardScreen(
+            goalId = selectedGoalId!!,
+            onBackClick = { 
+                showGoalDashboard = false
+                selectedGoalId = null
+                selectedCalculator = 3 // Switch to My Goals tab
+            },
+            onEditGoal = {
+                // TODO: Implement edit goal functionality
+            },
+            onManageFinances = {
+                showGoalDashboard = false
+                showFinancialSetup = true
+            },
+            goalViewModel = goalViewModel,
+            savingViewModel = savingViewModel,
+            debtViewModel = debtViewModel
+        )
+        return
+    }
+    
+    if (showGoalHistory && selectedGoalId != null) {
+        GoalHistoryScreen(
+            goalId = selectedGoalId!!,
+            goalName = selectedGoalName,
+            onBackClick = { 
+                showGoalHistory = false
+                showGoalDashboard = true
+            },
+            historyViewModel = goalHistoryViewModel
         )
         return
     }
@@ -236,12 +329,21 @@ fun SIPCalculatorApp() {
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.MoreHoriz, contentDescription = null) },
-                    label = { Text("More") },
+                    icon = { Icon(Icons.Default.TrackChanges, contentDescription = null) },
+                    label = { Text("My Goals") },
                     selected = selectedCalculator == 3,
                     onClick = { 
-                        analyticsManager.logButtonClick("navigation_more", screenNames[selectedCalculator])
+                        analyticsManager.logButtonClick("navigation_my_goals", screenNames[selectedCalculator])
                         selectedCalculator = 3 
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.MoreHoriz, contentDescription = null) },
+                    label = { Text("More") },
+                    selected = selectedCalculator == 4,
+                    onClick = { 
+                        analyticsManager.logButtonClick("navigation_more", screenNames[selectedCalculator])
+                        selectedCalculator = 4 
                     }
                 )
             }
@@ -256,8 +358,24 @@ fun SIPCalculatorApp() {
             when (selectedCalculator) {
                 0 -> SIPCalculatorScreen(analyticsManager)
                 1 -> SWPCalculatorScreen(analyticsManager)
-                2 -> GoalCalculatorScreen(analyticsManager)
-                3 -> MoreScreen(
+                2 -> GoalCalculatorScreen(
+                    analyticsManager = analyticsManager,
+                    onSetAsGoal = { goalResult ->
+                        pendingGoalResult = goalResult
+                        showGoalSetup = true
+                    }
+                )
+                3 -> GoalsListScreen(
+                    onGoalClick = { goalId ->
+                        selectedGoalId = goalId
+                        showGoalDashboard = true
+                    },
+                    onCreateGoal = {
+                        selectedCalculator = 2 // Navigate to Goal Calculator
+                    },
+                    goalViewModel = goalViewModel
+                )
+                4 -> MoreScreen(
                     analyticsManager = analyticsManager,
                     currentCalculator = moreScreenState,
                     onCalculatorChanged = { type -> moreScreenState = type }
