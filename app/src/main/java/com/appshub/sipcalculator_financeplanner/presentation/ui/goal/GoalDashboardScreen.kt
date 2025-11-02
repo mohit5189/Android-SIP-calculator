@@ -10,6 +10,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -31,6 +33,8 @@ import com.appshub.sipcalculator_financeplanner.data.entity.*
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.*
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
+import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import androidx.compose.ui.platform.LocalContext
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
@@ -44,11 +48,15 @@ fun GoalDashboardScreen(
     onBackClick: () -> Unit,
     onEditGoal: () -> Unit,
     onManageFinances: () -> Unit,
+    onDeleteGoal: (() -> Unit)? = null,
     goalViewModel: GoalViewModel = viewModel(),
     savingViewModel: SavingViewModel = viewModel(),
     debtViewModel: DebtViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val analyticsManager = remember { FirebaseAnalyticsManager.getInstance(context) }
+    
     val goalState by goalViewModel.uiState.collectAsStateWithLifecycle()
     val savingState by savingViewModel.uiState.collectAsStateWithLifecycle()
     val debtState by debtViewModel.uiState.collectAsStateWithLifecycle()
@@ -57,6 +65,7 @@ fun GoalDashboardScreen(
         goalViewModel.selectGoal(goalId)
         savingViewModel.loadSavingsForGoal(goalId)
         debtViewModel.loadDebtsForGoal(goalId)
+        analyticsManager.logGoalDetailScreenView(goalId)
     }
     
     val goal = goalState.selectedGoal
@@ -91,6 +100,10 @@ fun GoalDashboardScreen(
                 progress = progress,
                 onBackClick = onBackClick,
                 onEditGoal = onEditGoal,
+                onDeleteGoal = {
+                    goalViewModel.deleteGoal(goal)
+                    onDeleteGoal?.invoke() ?: onBackClick()
+                },
                 onRecordProgress = { goalViewModel.recordMonthlyProgress(goalId) }
             )
         }
@@ -196,8 +209,11 @@ fun GoalDashboardHeader(
     progress: GoalProgress?,
     onBackClick: () -> Unit,
     onEditGoal: () -> Unit,
+    onDeleteGoal: () -> Unit,
     onRecordProgress: () -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -226,9 +242,52 @@ fun GoalDashboardHeader(
         IconButton(onClick = onEditGoal) {
             Icon(
                 imageVector = Icons.Default.Edit,
-                contentDescription = "Edit Goal"
+                contentDescription = "Edit Goal",
+                tint = MaterialTheme.colorScheme.primary
             )
         }
+        
+        IconButton(onClick = { showDeleteDialog = true }) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete Goal",
+                tint = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+    
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(
+                    text = "Delete Goal?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Are you sure you want to delete \"${goal.goalName}\"? This action cannot be undone.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDeleteGoal()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -282,7 +341,9 @@ fun GoalProgressCard(
                 // Progress Bar
                 LinearProgressIndicator(
                     progress = (progressData.progressPercentage / 100.0).coerceIn(0.0, 1.0).toFloat(),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp),
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f)
                 )
@@ -436,12 +497,7 @@ fun FinancialOverviewCard(
                 scaleY = cardScale,
                 alpha = cardAlpha
             ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 12.dp,
-            pressedElevation = 16.dp,
-            focusedElevation = 14.dp,
-            hoveredElevation = 14.dp
-        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         )
@@ -689,8 +745,11 @@ fun SavingBreakdownItem(
             
             LinearProgressIndicator(
                 progress = (percentage / 100.0).coerceIn(0.0, 1.0).toFloat(),
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
             )
         }
         
@@ -775,8 +834,11 @@ fun DebtBreakdownItem(
             
             LinearProgressIndicator(
                 progress = (percentage / 100.0).coerceIn(0.0, 1.0).toFloat(),
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.error
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp),
+                color = MaterialTheme.colorScheme.error,
+                trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
             )
         }
         
@@ -883,3 +945,4 @@ fun generateInsights(goal: Goal, progress: GoalProgress, currencyCode: String): 
     
     return insights
 }
+

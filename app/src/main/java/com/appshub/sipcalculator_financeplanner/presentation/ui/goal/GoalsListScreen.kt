@@ -20,8 +20,11 @@ import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalViewM
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.PinViewModel
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.PinUiState
 import com.appshub.sipcalculator_financeplanner.presentation.ui.pin.PinScreen
+import com.appshub.sipcalculator_financeplanner.presentation.ui.pin.ForgotPinDialog
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
+import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import androidx.compose.ui.platform.LocalContext
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -35,15 +38,25 @@ fun GoalsListScreen(
     pinViewModel: PinViewModel? = null,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val analyticsManager = remember { FirebaseAnalyticsManager.getInstance(context) }
+    
     val goalState by goalViewModel.uiState.collectAsStateWithLifecycle()
     val pinState by pinViewModel?.uiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(PinUiState()) }
     var showPinOptions by remember { mutableStateOf(false) }
     var showPinSetup by remember { mutableStateOf(false) }
     var showPinVerification by remember { mutableStateOf(false) }
+    var showForgotPinDialog by remember { mutableStateOf(false) }
     
+    
+    // Goals are automatically loaded in the ViewModel's init block
+    
+    // Goals are automatically refreshed through the repository flow
+    
+    // Track screen view and refresh data when screen is visible
     LaunchedEffect(Unit) {
-        // Goals are automatically loaded in ViewModel init
-        // PIN settings are automatically loaded in PinViewModel init
+        analyticsManager.logGoalListScreenView()
+        goalViewModel.refreshGoals()
     }
     
     // Check authentication on screen entry
@@ -113,7 +126,16 @@ fun GoalsListScreen(
                 EmptyGoalsState(onCreateGoal)
             }
         } else {
-            items(goalState.goals) { goal ->
+            // Sort goals to show active and paused first, completed at the end
+            val sortedGoals = goalState.goals.sortedBy { goal ->
+                when (goal.status) {
+                    GoalStatus.ACTIVE -> 0
+                    GoalStatus.PAUSED -> 1
+                    GoalStatus.COMPLETED -> 2
+                }
+            }
+            
+            items(sortedGoals) { goal ->
                 val progress = goalState.goalsProgress[goal.goalId]
                 GoalCard(
                     goal = goal,
@@ -242,10 +264,9 @@ fun GoalsListScreen(
                 pinViewModel?.authenticatePin(pin)
             },
             onForgotPin = {
-                // Handle forgot PIN - could reset PIN or show recovery options
-                pinViewModel?.disablePin()
-                showPinVerification = false
-            }
+                showForgotPinDialog = true
+            },
+            actualPin = pinState.actualPin
         )
     }
     
@@ -255,6 +276,14 @@ fun GoalsListScreen(
             showPinVerification = false
         }
     }
+    
+    // Forgot PIN Dialog
+    if (showForgotPinDialog) {
+        ForgotPinDialog(
+            onDismiss = { showForgotPinDialog = false },
+            onSendEmail = { /* Email intent is handled inside the dialog */ }
+        )
+    }
 }
 
 @Composable
@@ -262,7 +291,6 @@ fun GoalsSummaryCard(goals: List<Goal>, currencyCode: String) {
     val activeGoals = goals.filter { it.status == GoalStatus.ACTIVE }
     val completedGoals = goals.filter { it.status == GoalStatus.COMPLETED }
     val totalTargetAmount = activeGoals.sumOf { it.targetAmount }
-    val totalCurrentAmount = activeGoals.sumOf { it.currentAmount }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -313,22 +341,6 @@ fun GoalsSummaryCard(goals: List<Goal>, currencyCode: String) {
                 )
             }
             
-            if (totalTargetAmount > 0) {
-                val overallProgress = (totalCurrentAmount / totalTargetAmount) * 100
-                
-                Text(
-                    text = "Overall Progress: ${String.format("%.1f", overallProgress)}%",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                
-                LinearProgressIndicator(
-                    progress = (overallProgress / 100.0).coerceIn(0.0, 1.0).toFloat(),
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f)
-                )
-            }
         }
     }
 }
@@ -393,30 +405,14 @@ fun GoalCard(
             }
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = when (goal.status) {
-                GoalStatus.COMPLETED -> 12.dp
-                GoalStatus.ACTIVE -> 8.dp
-                GoalStatus.PAUSED -> 4.dp
-            },
-            pressedElevation = when (goal.status) {
-                GoalStatus.COMPLETED -> 16.dp
-                GoalStatus.ACTIVE -> 12.dp
-                GoalStatus.PAUSED -> 6.dp
-            },
-            focusedElevation = when (goal.status) {
-                GoalStatus.COMPLETED -> 14.dp
-                GoalStatus.ACTIVE -> 10.dp
-                GoalStatus.PAUSED -> 5.dp
-            },
-            hoveredElevation = when (goal.status) {
-                GoalStatus.COMPLETED -> 14.dp
-                GoalStatus.ACTIVE -> 10.dp
-                GoalStatus.PAUSED -> 5.dp
-            }
+            defaultElevation = if (goal.status == GoalStatus.COMPLETED) 0.dp else 4.dp,
+            pressedElevation = if (goal.status == GoalStatus.COMPLETED) 0.dp else 8.dp,
+            focusedElevation = if (goal.status == GoalStatus.COMPLETED) 0.dp else 6.dp
         ),
         border = when (goal.status) {
             GoalStatus.COMPLETED -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
-            else -> null
+            GoalStatus.PAUSED -> BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+            else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
         }
     ) {
         Column(
@@ -487,13 +483,16 @@ fun GoalCard(
                 
                 LinearProgressIndicator(
                     progress = (progressPercentage / 100.0).coerceIn(0.0, 1.0).toFloat(),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp),
                     color = when {
                         goal.status == GoalStatus.COMPLETED -> MaterialTheme.colorScheme.primary
                         progressPercentage >= 75 -> Color(0xFF4CAF50)
                         progressPercentage >= 50 -> Color(0xFFFF9800)
                         else -> MaterialTheme.colorScheme.primary
-                    }
+                    },
+                    trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                 )
                 
                 Row(

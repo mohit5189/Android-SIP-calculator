@@ -22,6 +22,7 @@ import com.appshub.sipcalculator_financeplanner.ui.theme.GradientEnd
 import com.appshub.sipcalculator_financeplanner.ui.theme.GradientStart
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +33,8 @@ fun SIPDetailedBreakdownScreen(
 ) {
     var selectedYear by remember { mutableStateOf<Int?>(null) }
     
-    LazyColumn(
+    CurrencyProvider { currencyCode ->
+        LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -58,7 +60,7 @@ fun SIPDetailedBreakdownScreen(
             
             // Summary Card
             item {
-                SummaryCard(sipResult)
+                SummaryCard(sipResult, currencyCode)
             }
             
             // Year-wise breakdown
@@ -71,9 +73,10 @@ fun SIPDetailedBreakdownScreen(
                 )
             }
             
-            itemsIndexed(sipResult.yearWiseData) { index, yearData ->
+            itemsIndexed(sipResult.yearWiseData) { _, yearData ->
                 YearCard(
                     yearData = yearData,
+                    currencyCode = currencyCode,
                     isExpanded = selectedYear == yearData.year,
                     onToggleExpanded = { 
                         selectedYear = if (selectedYear == yearData.year) null else yearData.year 
@@ -81,11 +84,12 @@ fun SIPDetailedBreakdownScreen(
                 )
             }
         }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SummaryCard(sipResult: SIPResult) {
+fun SummaryCard(sipResult: SIPResult, currencyCode: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -117,12 +121,14 @@ fun SummaryCard(sipResult: SIPResult) {
                     SummaryItem(
                         title = "Monthly SIP",
                         amount = sipResult.monthlyInvestment,
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                     
                     SummaryItem(
                         title = "Duration",
                         value = "${sipResult.durationInYears} years",
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -134,6 +140,7 @@ fun SummaryCard(sipResult: SIPResult) {
                     SummaryItem(
                         title = "Expected Return",
                         value = formatPercentage(sipResult.annualReturnRate),
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                     
@@ -141,6 +148,7 @@ fun SummaryCard(sipResult: SIPResult) {
                         SummaryItem(
                             title = "Step-up",
                             value = formatPercentage(sipResult.stepUpPercentage),
+                            currencyCode = currencyCode,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -155,12 +163,14 @@ fun SummaryCard(sipResult: SIPResult) {
                     SummaryItem(
                         title = "Total Invested",
                         amount = sipResult.totalInvested,
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                     
                     SummaryItem(
                         title = "Total Returns",
                         amount = sipResult.totalGains,
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -168,6 +178,7 @@ fun SummaryCard(sipResult: SIPResult) {
                 SummaryItem(
                     title = "Maturity Amount",
                     amount = sipResult.maturityAmount,
+                    currencyCode = currencyCode,
                     isHighlighted = true,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
@@ -181,6 +192,7 @@ fun SummaryItem(
     title: String,
     amount: Double? = null,
     value: String? = null,
+    currencyCode: String,
     modifier: Modifier = Modifier,
     isHighlighted: Boolean = false
 ) {
@@ -195,7 +207,7 @@ fun SummaryItem(
         )
         
         Text(
-            text = amount?.let { formatCurrency(it) } ?: value ?: "",
+            text = amount?.let { formatCurrency(it, currencyCode) } ?: value ?: "",
             style = if (isHighlighted) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleMedium,
             color = Color.White,
             fontWeight = FontWeight.Bold
@@ -207,6 +219,7 @@ fun SummaryItem(
 @Composable
 fun YearCard(
     yearData: YearWiseData,
+    currencyCode: String,
     isExpanded: Boolean,
     onToggleExpanded: () -> Unit
 ) {
@@ -244,10 +257,10 @@ fun YearCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                YearSummaryItem("Opening", yearData.openingBalance)
-                YearSummaryItem("Invested", yearData.totalInvestedThisYear)
-                YearSummaryItem("Interest", yearData.interestEarnedThisYear)
-                YearSummaryItem("Closing", yearData.closingBalance)
+                YearSummaryItem("Opening", yearData.openingBalance, currencyCode)
+                YearSummaryItem("Invested", yearData.totalInvestedThisYear, currencyCode)
+                YearSummaryItem("Interest", yearData.interestEarnedThisYear, currencyCode)
+                YearSummaryItem("Closing", yearData.closingBalance, currencyCode)
             }
             
             // Monthly breakdown (shown when expanded)
@@ -265,7 +278,7 @@ fun YearCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 yearData.monthlyData.forEach { monthlyData ->
-                    MonthlyBreakdownRow(monthlyData)
+                    MonthlyBreakdownRow(monthlyData, currencyCode)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
             }
@@ -274,7 +287,7 @@ fun YearCard(
 }
 
 @Composable
-fun YearSummaryItem(label: String, amount: Double) {
+fun YearSummaryItem(label: String, amount: Double, currencyCode: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
@@ -282,7 +295,7 @@ fun YearSummaryItem(label: String, amount: Double) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = formatCurrency(amount),
+            text = formatCurrency(amount, currencyCode),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Medium
         )
@@ -290,7 +303,7 @@ fun YearSummaryItem(label: String, amount: Double) {
 }
 
 @Composable
-fun MonthlyBreakdownRow(monthlyData: MonthlyData) {
+fun MonthlyBreakdownRow(monthlyData: MonthlyData, currencyCode: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -309,19 +322,19 @@ fun MonthlyBreakdownRow(monthlyData: MonthlyData) {
         )
         
         Text(
-            text = formatCurrency(monthlyData.sipAmount),
+            text = formatCurrency(monthlyData.sipAmount, currencyCode),
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.weight(1f)
         )
         
         Text(
-            text = formatCurrency(monthlyData.interestEarned),
+            text = formatCurrency(monthlyData.interestEarned, currencyCode),
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.weight(1f)
         )
         
         Text(
-            text = formatCurrency(monthlyData.closingBalance),
+            text = formatCurrency(monthlyData.closingBalance, currencyCode),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f)

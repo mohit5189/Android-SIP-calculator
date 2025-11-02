@@ -29,6 +29,7 @@ fun PinScreen(
     onPinEntered: (String) -> Unit,
     onForgotPin: () -> Unit,
     isSetupMode: Boolean = false,
+    actualPin: String? = null, // For development 5-tap feature
     modifier: Modifier = Modifier
 ) {
     var pin by remember { mutableStateOf("") }
@@ -45,7 +46,7 @@ fun PinScreen(
     LaunchedEffect(tapCount) {
         if (tapCount >= 5) {
             showToast = true
-            kotlinx.coroutines.delay(1000)
+            kotlinx.coroutines.delay(3000) // Show for longer
             showToast = false
             tapCount = 0
         }
@@ -64,8 +65,20 @@ fun PinScreen(
     // Toast for secret tap
     if (showToast) {
         LaunchedEffect(Unit) {
-            // This would show the actual PIN, but for demo we'll show a message
-            android.widget.Toast.makeText(context, "PIN: Contact support for recovery", android.widget.Toast.LENGTH_SHORT).show()
+            if (actualPin != null && !isSetupMode) {
+                // Show actual PIN for development/recovery
+                android.widget.Toast.makeText(
+                    context, 
+                    "🔐 Your PIN: $actualPin", 
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            } else {
+                android.widget.Toast.makeText(
+                    context, 
+                    "🔐 PIN Recovery: Email utilityappsmaker5189@gmail.com for assistance", 
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
     
@@ -120,6 +133,7 @@ fun PinScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
+        
         
         Spacer(modifier = Modifier.height(32.dp))
         
@@ -215,12 +229,30 @@ fun PinScreen(
         
         // Forgot PIN (only in auth mode)
         if (!isSetupMode) {
-            TextButton(
-                onClick = onForgotPin
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Forgot PIN?",
-                    color = MaterialTheme.colorScheme.primary
+                    text = "Forgot PIN? ",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Text(
+                    text = "Contact Support",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.clickable {
+                        // Show toast with email instructions
+                        android.widget.Toast.makeText(
+                            context,
+                            "📧 Send email to: utilityappsmaker5189@gmail.com",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
                 )
             }
         }

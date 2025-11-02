@@ -1,5 +1,6 @@
 package com.appshub.sipcalculator_financeplanner.presentation.ui.calculator
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.items
@@ -13,9 +14,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.*
@@ -250,26 +253,81 @@ fun GoalDetailedBreakdownScreen(
             // Set as Goal Button
             onSetAsGoal?.let { callback ->
                 item {
+                    // Animation states
+                    var animationStarted by remember { mutableStateOf(false) }
+                    
+                    val buttonScale by animateFloatAsState(
+                        targetValue = if (animationStarted) 1f else 0.8f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        label = "buttonScale"
+                    )
+                    
+                    val buttonAlpha by animateFloatAsState(
+                        targetValue = if (animationStarted) 1f else 0f,
+                        animationSpec = tween(durationMillis = 800),
+                        label = "buttonAlpha"
+                    )
+                    
+                    // Pulsing animation for attention
+                    val pulseAnimation = rememberInfiniteTransition(label = "pulse")
+                    val buttonPulse by pulseAnimation.animateFloat(
+                        initialValue = 1f,
+                        targetValue = 1.05f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "buttonPulse"
+                    )
+                    
+                    // Shimmer effect for the icon
+                    val shimmerAnimation = rememberInfiniteTransition(label = "shimmer")
+                    val iconShimmer by shimmerAnimation.animateFloat(
+                        initialValue = 0.3f,
+                        targetValue = 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = 2000, easing = FastOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "iconShimmer"
+                    )
+                    
+                    LaunchedEffect(Unit) {
+                        delay(500) // Delay to make it appear after other content
+                        animationStarted = true
+                    }
+                    
                     Button(
                         onClick = { callback(goalResult) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 8.dp)
+                            .graphicsLayer(
+                                scaleX = buttonScale * buttonPulse,
+                                scaleY = buttonScale * buttonPulse,
+                                alpha = buttonAlpha,
+                                shadowElevation = 12f
+                            ),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 8.dp,
-                            pressedElevation = 12.dp,
-                            focusedElevation = 10.dp,
-                            hoveredElevation = 10.dp
+                            pressedElevation = 16.dp,
+                            focusedElevation = 12.dp,
+                            hoveredElevation = 12.dp
                         )
                     ) {
                         Icon(
                             imageVector = Icons.Default.Flag,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier
+                                .size(20.dp)
+                                .graphicsLayer(alpha = iconShimmer)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(

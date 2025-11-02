@@ -10,7 +10,7 @@ import com.appshub.sipcalculator_financeplanner.data.dao.*
 
 @Database(
     entities = [Goal::class, Saving::class, Debt::class, GoalHistory::class, AppSettings::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

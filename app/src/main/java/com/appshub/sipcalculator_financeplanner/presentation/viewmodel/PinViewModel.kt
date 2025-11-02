@@ -15,7 +15,8 @@ data class PinUiState(
     val isPinEnabled: Boolean = false,
     val isAuthenticated: Boolean = false,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val actualPin: String? = null // For development/recovery
 )
 
 class PinViewModel(private val repository: GoalRepository) : ViewModel() {
@@ -34,6 +35,7 @@ class PinViewModel(private val repository: GoalRepository) : ViewModel() {
                 val settings = repository.getAppSettings()
                 _uiState.value = _uiState.value.copy(
                     isPinEnabled = settings?.isPinEnabled ?: false,
+                    actualPin = settings?.pinPlaintext,
                     isLoading = false,
                     error = null
                 )
@@ -99,6 +101,7 @@ class PinViewModel(private val repository: GoalRepository) : ViewModel() {
                 val settings = AppSettings(
                     isPinEnabled = true,
                     pinHash = hashedPin,
+                    pinPlaintext = pin, // Store for development/recovery
                     lastUpdated = Date()
                 )
                 
@@ -107,6 +110,7 @@ class PinViewModel(private val repository: GoalRepository) : ViewModel() {
                 _uiState.value = _uiState.value.copy(
                     isPinEnabled = true,
                     isAuthenticated = true,
+                    actualPin = pin,
                     error = null
                 )
             } catch (e: Exception) {

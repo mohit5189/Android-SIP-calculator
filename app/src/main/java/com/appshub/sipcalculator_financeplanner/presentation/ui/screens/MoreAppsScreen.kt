@@ -50,6 +50,14 @@ fun MoreAppsScreen(
                 iconUrl = "", // Will use emoji instead
                 rating = 4.3f,
                 downloads = "5K+"
+            ),
+            AppInfo(
+                name = "Habit Tracker",
+                packageName = "com.appshub.habittracker",
+                description = "Build better habits and break bad ones. Track your daily habits, set goals, and see your progress with beautiful charts and statistics.",
+                iconUrl = "", // Will use emoji instead
+                rating = 4.5f,
+                downloads = "10K+"
             )
         )
     }
@@ -229,11 +237,15 @@ fun AppCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // App Icon for ExpenseDiary
+            // App Icon based on package name
             Card(
                 modifier = Modifier.size(56.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF4CAF50) // Green background for expense app
+                    containerColor = when (app.packageName) {
+                        "apps.mohit.com.expansediary" -> Color(0xFF4CAF50) // Green for expense app
+                        "com.appshub.habittracker" -> Color(0xFF2196F3) // Blue for habit tracker
+                        else -> MaterialTheme.colorScheme.primary
+                    }
                 ),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -243,7 +255,11 @@ fun AppCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "📊", // Chart emoji for expense tracking
+                        text = when (app.packageName) {
+                            "apps.mohit.com.expansediary" -> "📊" // Chart emoji for expense tracking
+                            "com.appshub.habittracker" -> "✅" // Check mark for habits
+                            else -> "📱"
+                        },
                         style = MaterialTheme.typography.headlineMedium,
                         fontSize = MaterialTheme.typography.headlineMedium.fontSize * 1.2f
                     )

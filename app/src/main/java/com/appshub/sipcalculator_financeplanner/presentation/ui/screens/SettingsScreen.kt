@@ -3,6 +3,7 @@ package com.appshub.sipcalculator_financeplanner.presentation.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -119,6 +120,52 @@ fun SettingsScreen(
                             )
                         }
                         context.startActivity(Intent.createChooser(shareIntent, "Share App"))
+                    }
+                )
+            }
+            
+            // Support Section
+            SettingsSection(title = "Support") {
+                // Contact Us
+                SettingsItem(
+                    icon = Icons.Default.Email,
+                    title = "Contact Us",
+                    subtitle = "Get in touch with our support team",
+                    onClick = {
+                        val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:utilityappsmaker5189@gmail.com")
+                            putExtra(Intent.EXTRA_SUBJECT, "SIP Calculator - Support Request")
+                            putExtra(Intent.EXTRA_TEXT, "Hi,\n\nI need help with the SIP Calculator app.\n\nApp Version: v$appVersion\nDevice: ${android.os.Build.MODEL}\nAndroid Version: ${android.os.Build.VERSION.RELEASE}\n\nIssue Description:\n")
+                        }
+                        try {
+                            context.startActivity(emailIntent)
+                        } catch (e: Exception) {
+                            // Fallback to generic email intent
+                            val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_EMAIL, arrayOf("utilityappsmaker5189@gmail.com"))
+                                putExtra(Intent.EXTRA_SUBJECT, "SIP Calculator - Support Request")
+                                putExtra(Intent.EXTRA_TEXT, "Hi,\n\nI need help with the SIP Calculator app.\n\nApp Version: v$appVersion\nDevice: ${android.os.Build.MODEL}\nAndroid Version: ${android.os.Build.VERSION.RELEASE}\n\nIssue Description:\n")
+                            }
+                            context.startActivity(Intent.createChooser(fallbackIntent, "Send Email"))
+                        }
+                    }
+                )
+                
+                // Rate App
+                SettingsItem(
+                    icon = Icons.Default.Star,
+                    title = "Rate App",
+                    subtitle = "Share your feedback on Play Store",
+                    onClick = {
+                        try {
+                            val playStoreIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))
+                            context.startActivity(playStoreIntent)
+                        } catch (e: Exception) {
+                            // Fallback to browser
+                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}"))
+                            context.startActivity(browserIntent)
+                        }
                     }
                 )
             }

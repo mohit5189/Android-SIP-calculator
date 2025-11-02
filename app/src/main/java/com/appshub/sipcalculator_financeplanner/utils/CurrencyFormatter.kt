@@ -6,16 +6,10 @@ import java.util.*
 
 fun formatCurrency(amount: Double, currencyCode: String = "INR"): String {
     val currency = CurrencyInfo.getCurrencyByCode(currencyCode) ?: CurrencyInfo.getCurrencyByCode("INR")!!
-    val locale = when (currencyCode) {
-        "USD" -> Locale("en", "US")
-        "EUR" -> Locale("en", "DE")
-        "GBP" -> Locale("en", "GB")
-        "AUD" -> Locale("en", "AU")
-        "CAD" -> Locale("en", "CA")
-        "JPY" -> Locale("ja", "JP")
-        else -> Locale("en", "IN") // Default to Indian locale for INR and fallback
-    }
     
+    // Use consistent Indian locale formatting regardless of currency
+    // This ensures amounts are displayed as-is with consistent formatting
+    val locale = Locale("en", "IN")
     val formatter = NumberFormat.getInstance(locale)
     val formattedAmount = formatter.format(amount.toLong())
     

@@ -19,7 +19,10 @@ data class GoalUiState(
     val goalProgress: GoalProgress? = null
 )
 
-class GoalViewModel(private val repository: GoalRepository) : ViewModel() {
+class GoalViewModel(
+    private val repository: GoalRepository,
+    private val analyticsManager: com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager? = null
+) : ViewModel() {
     
     private val _uiState = MutableStateFlow(GoalUiState())
     val uiState: StateFlow<GoalUiState> = _uiState.asStateFlow()
@@ -93,6 +96,13 @@ class GoalViewModel(private val repository: GoalRepository) : ViewModel() {
                 description = description
             )
             repository.insertGoal(goal)
+            
+            // Track goal creation
+            analyticsManager?.logGoalCreated(
+                goalType = goalType.name,
+                targetAmount = targetAmount
+            )
+            
             _uiState.value = _uiState.value.copy(
                 selectedGoal = goal,
                 error = null
@@ -130,6 +140,13 @@ class GoalViewModel(private val repository: GoalRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 repository.deleteGoal(goal)
+                
+                // Track goal deletion
+                analyticsManager?.logGoalDeleted(
+                    goalType = goal.goalType.name,
+                    targetAmount = goal.targetAmount
+                )
+                
                 _uiState.value = _uiState.value.copy(
                     selectedGoal = null,
                     goalProgress = null,
@@ -162,5 +179,9 @@ class GoalViewModel(private val repository: GoalRepository) : ViewModel() {
             selectedGoal = null,
             goalProgress = null
         )
+    }
+    
+    fun refreshGoals() {
+        loadActiveGoals()
     }
 }

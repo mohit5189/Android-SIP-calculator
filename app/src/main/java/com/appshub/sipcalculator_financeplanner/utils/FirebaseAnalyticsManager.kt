@@ -150,6 +150,56 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
         firebaseAnalytics.logEvent(eventName, bundle)
     }
     
+    // Goal Management Events
+    fun logGoalCreated(goalType: String, targetAmount: Double) {
+        if (!isAnalyticsEnabled) return
+        val bundle = Bundle().apply {
+            putString("goal_type", goalType)
+            putDouble("target_amount", targetAmount)
+        }
+        firebaseAnalytics.logEvent("goal_created", bundle)
+    }
+    
+    fun logGoalDeleted(goalType: String, targetAmount: Double) {
+        if (!isAnalyticsEnabled) return
+        val bundle = Bundle().apply {
+            putString("goal_type", goalType)
+            putDouble("target_amount", targetAmount)
+        }
+        firebaseAnalytics.logEvent("goal_deleted", bundle)
+    }
+    
+    // Investment Management Events
+    fun logInvestmentAdded(goalId: String, amount: Double, investmentType: String) {
+        if (!isAnalyticsEnabled) return
+        val bundle = Bundle().apply {
+            putString("goal_id", goalId)
+            putDouble("amount", amount)
+            putString("investment_type", investmentType)
+        }
+        firebaseAnalytics.logEvent("investment_added", bundle)
+    }
+    
+    fun logInvestmentScreenView() {
+        if (!isAnalyticsEnabled) return
+        logScreenView("add_investment", "InvestmentScreen")
+    }
+    
+    fun logGoalListScreenView() {
+        if (!isAnalyticsEnabled) return
+        logScreenView("goal_list", "GoalsListScreen")
+    }
+    
+    fun logGoalDetailScreenView(goalId: String) {
+        if (!isAnalyticsEnabled) return
+        val bundle = Bundle().apply {
+            putString(FirebaseAnalytics.Param.SCREEN_NAME, "goal_detail")
+            putString(FirebaseAnalytics.Param.SCREEN_CLASS, "GoalDashboardScreen")
+            putString("goal_id", goalId)
+        }
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle)
+    }
+    
     // Debug utility to check if analytics is enabled
     fun getAnalyticsStatus(): Boolean {
         return isAnalyticsEnabled
