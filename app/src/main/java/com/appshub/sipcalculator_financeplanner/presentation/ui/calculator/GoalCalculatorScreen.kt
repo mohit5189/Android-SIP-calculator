@@ -24,6 +24,7 @@ import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalCalcu
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
 import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,18 +37,24 @@ fun GoalCalculatorScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     if (uiState.showDetailedBreakdown && uiState.result != null) {
-        GoalDetailedBreakdownScreen(
-            goalResult = uiState.result!!,
-            onBackClick = { viewModel.hideDetailedBreakdown() },
-            onSetAsGoal = onSetAsGoal
-        )
+        CurrencyProvider { currencyCode ->
+            GoalDetailedBreakdownScreen(
+                goalResult = uiState.result!!,
+                onBackClick = { viewModel.hideDetailedBreakdown() },
+                onSetAsGoal = onSetAsGoal,
+                currencyCode = currencyCode
+            )
+        }
     } else {
-        GoalCalculatorMainScreen(
-            uiState = uiState,
-            viewModel = viewModel,
-            analyticsManager = analyticsManager,
-            modifier = modifier
-        )
+        CurrencyProvider { currencyCode ->
+            GoalCalculatorMainScreen(
+                uiState = uiState,
+                viewModel = viewModel,
+                analyticsManager = analyticsManager,
+                currencyCode = currencyCode,
+                modifier = modifier
+            )
+        }
     }
 }
 
@@ -56,6 +63,7 @@ fun GoalCalculatorMainScreen(
     uiState: GoalCalculatorUiState,
     viewModel: GoalCalculatorViewModel,
     analyticsManager: com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager? = null,
+    currencyCode: String,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -75,7 +83,7 @@ fun GoalCalculatorMainScreen(
                 value = uiState.targetAmount,
                 onValueChange = viewModel::updateTargetAmount,
                 label = "Target Goal Amount",
-                prefix = "₹",
+                prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
                 suggestions = SuggestionData.goalAmounts,
                 helperText = "How much money do you need?",
                 isError = uiState.error != null && uiState.targetAmount.isEmpty()
@@ -97,7 +105,7 @@ fun GoalCalculatorMainScreen(
                 value = uiState.initialAmount,
                 onValueChange = viewModel::updateInitialAmount,
                 label = "Initial Lump Sum (Optional)",
-                prefix = "₹",
+                prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
                 suggestions = SuggestionData.initialCorpus,
                 helperText = "Any amount you already have or can invest now"
             )
@@ -207,6 +215,7 @@ fun GoalDetailedBreakdownScreen(
     goalResult: com.appshub.sipcalculator_financeplanner.data.models.GoalResult,
     onBackClick: () -> Unit,
     onSetAsGoal: ((com.appshub.sipcalculator_financeplanner.data.models.GoalResult) -> Unit)? = null,
+    currencyCode: String,
     modifier: Modifier = Modifier
 ) {
     androidx.compose.foundation.lazy.LazyColumn(
@@ -235,7 +244,7 @@ fun GoalDetailedBreakdownScreen(
             
             // Summary Card
             item {
-                GoalSummaryCard(goalResult)
+                GoalSummaryCard(goalResult, currencyCode)
             }
             
             // Set as Goal Button
@@ -273,7 +282,7 @@ fun GoalDetailedBreakdownScreen(
             
             // Goal Achievement Probability
             item {
-                GoalProbabilityCard(goalResult)
+                GoalProbabilityCard(goalResult, currencyCode)
             }
             
             // Milestones
@@ -287,14 +296,14 @@ fun GoalDetailedBreakdownScreen(
             }
             
             items(goalResult.milestones) { milestone ->
-                MilestoneCard(milestone)
+                MilestoneCard(milestone, currencyCode)
             }
         }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GoalSummaryCard(goalResult: com.appshub.sipcalculator_financeplanner.data.models.GoalResult) {
+fun GoalSummaryCard(goalResult: com.appshub.sipcalculator_financeplanner.data.models.GoalResult, currencyCode: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
@@ -329,12 +338,14 @@ fun GoalSummaryCard(goalResult: com.appshub.sipcalculator_financeplanner.data.mo
                     GoalSummaryItem(
                         title = "Target Amount",
                         amount = goalResult.targetAmount,
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                     
                     GoalSummaryItem(
                         title = "Time Horizon",
                         value = "${goalResult.timeHorizon} years",
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -343,6 +354,7 @@ fun GoalSummaryCard(goalResult: com.appshub.sipcalculator_financeplanner.data.mo
                     GoalSummaryItem(
                         title = "Initial Investment",
                         amount = goalResult.initialAmount,
+                        currencyCode = currencyCode,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                 }
@@ -402,7 +414,7 @@ fun RequiredSIPCard(goalResult: com.appshub.sipcalculator_financeplanner.data.mo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GoalProbabilityCard(goalResult: com.appshub.sipcalculator_financeplanner.data.models.GoalResult) {
+fun GoalProbabilityCard(goalResult: com.appshub.sipcalculator_financeplanner.data.models.GoalResult, currencyCode: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -475,7 +487,7 @@ fun GoalProbabilityCard(goalResult: com.appshub.sipcalculator_financeplanner.dat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MilestoneCard(milestone: com.appshub.sipcalculator_financeplanner.data.models.Milestone) {
+fun MilestoneCard(milestone: com.appshub.sipcalculator_financeplanner.data.models.Milestone, currencyCode: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -513,7 +525,7 @@ fun MilestoneCard(milestone: com.appshub.sipcalculator_financeplanner.data.model
                 )
                 
                 Text(
-                    text = formatCurrency(milestone.targetAmount),
+                    text = formatCurrency(milestone.targetAmount, currencyCode),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -547,6 +559,7 @@ fun GoalSummaryItem(
     title: String,
     amount: Double? = null,
     value: String? = null,
+    currencyCode: String? = null,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -557,7 +570,7 @@ fun GoalSummaryItem(
         )
         
         Text(
-            text = amount?.let { formatCurrency(it) } ?: value ?: "",
+            text = amount?.let { formatCurrency(it, currencyCode ?: "INR") } ?: value ?: "",
             style = MaterialTheme.typography.titleMedium,
             color = Color.White,
             fontWeight = FontWeight.Bold

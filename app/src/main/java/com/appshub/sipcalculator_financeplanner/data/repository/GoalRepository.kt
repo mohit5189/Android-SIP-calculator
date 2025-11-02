@@ -12,7 +12,8 @@ class GoalRepository(
     private val goalDao: GoalDao,
     private val savingDao: SavingDao,
     private val debtDao: DebtDao,
-    private val goalHistoryDao: GoalHistoryDao
+    private val goalHistoryDao: GoalHistoryDao,
+    private val appSettingsDao: AppSettingsDao
 ) {
     
     fun getAllGoals(): Flow<List<Goal>> = goalDao.getAllGoals()
@@ -150,4 +151,16 @@ class GoalRepository(
             getGoalProgress(goalId)
         }
     }
+    
+    // App Settings operations
+    suspend fun getAppSettings(): AppSettings? = appSettingsDao.getSettings()
+    
+    suspend fun insertAppSettings(settings: AppSettings) = appSettingsDao.insertSettings(settings)
+    
+    suspend fun updateAppSettings(settings: AppSettings) = appSettingsDao.updateSettings(settings)
+    
+    suspend fun updatePinSettings(enabled: Boolean, pinHash: String) = 
+        appSettingsDao.updatePinSettings(enabled, pinHash, Date())
+    
+    suspend fun disablePin() = appSettingsDao.disablePin(Date())
 }

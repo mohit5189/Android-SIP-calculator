@@ -20,6 +20,7 @@ import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.GoalC
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.MoreScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.calculator.MoreCalculatorType
 import com.appshub.sipcalculator_financeplanner.presentation.ui.screens.MoreAppsScreen
+import com.appshub.sipcalculator_financeplanner.presentation.ui.screens.SettingsScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.RatingDialog
 import com.appshub.sipcalculator_financeplanner.presentation.ui.goal.*
 import com.appshub.sipcalculator_financeplanner.data.database.GoalDatabase
@@ -82,6 +83,7 @@ fun SIPCalculatorApp() {
     val savingViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SavingViewModel>(factory = viewModelFactory)
     val debtViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.DebtViewModel>(factory = viewModelFactory)
     val goalHistoryViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalHistoryViewModel>(factory = viewModelFactory)
+    val pinViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.PinViewModel>(factory = viewModelFactory)
     var selectedCalculator by remember { mutableStateOf(0) }
     var showMoreApps by remember { mutableStateOf(false) }
     var showRatingDialog by remember { mutableStateOf(false) }
@@ -99,6 +101,7 @@ fun SIPCalculatorApp() {
     var financialSetupSource by remember { mutableStateOf<String?>(null) } // "setup" or "manage"
     var showEditGoal by remember { mutableStateOf(false) }
     var editingGoal by remember { mutableStateOf<Goal?>(null) }
+    var showSettings by remember { mutableStateOf(false) }
     
     // Dynamic title based on current screen
     val currentTitle = when (moreScreenState) {
@@ -145,6 +148,14 @@ fun SIPCalculatorApp() {
         MoreAppsScreen(
             onBackClick = { showMoreApps = false },
             analyticsManager = analyticsManager
+        )
+        return
+    }
+    
+    // Handle Settings screen
+    if (showSettings) {
+        SettingsScreen(
+            onBackClick = { showSettings = false }
         )
         return
     }
@@ -197,6 +208,9 @@ fun SIPCalculatorApp() {
                 showGoalDashboard = false
                 selectedGoalId = null
                 selectedCalculator = 3 // Switch to My Goals tab
+                // Clear edit goal state
+                showEditGoal = false
+                editingGoal = null
             },
             onEditGoal = {
                 // Get current goal and open edit dialog
@@ -309,6 +323,22 @@ fun SIPCalculatorApp() {
                                     )
                                 }
                             )
+                            
+                            // Settings option
+                            DropdownMenuItem(
+                                text = { Text("Settings") },
+                                onClick = {
+                                    showMenu = false
+                                    showSettings = true
+                                    analyticsManager.logButtonClick("settings_menu", "MainActivity")
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
                         }
                     }
                 }
@@ -388,7 +418,8 @@ fun SIPCalculatorApp() {
                     onCreateGoal = {
                         selectedCalculator = 2 // Navigate to Goal Calculator
                     },
-                    goalViewModel = goalViewModel
+                    goalViewModel = goalViewModel,
+                    pinViewModel = pinViewModel
                 )
                 4 -> MoreScreen(
                     analyticsManager = analyticsManager,

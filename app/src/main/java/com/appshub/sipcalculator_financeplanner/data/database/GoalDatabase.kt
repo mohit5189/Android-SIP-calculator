@@ -9,8 +9,8 @@ import com.appshub.sipcalculator_financeplanner.data.entity.*
 import com.appshub.sipcalculator_financeplanner.data.dao.*
 
 @Database(
-    entities = [Goal::class, Saving::class, Debt::class, GoalHistory::class],
-    version = 1,
+    entities = [Goal::class, Saving::class, Debt::class, GoalHistory::class, AppSettings::class],
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -20,6 +20,7 @@ abstract class GoalDatabase : RoomDatabase() {
     abstract fun savingDao(): SavingDao
     abstract fun debtDao(): DebtDao
     abstract fun goalHistoryDao(): GoalHistoryDao
+    abstract fun appSettingsDao(): AppSettingsDao
     
     companion object {
         @Volatile

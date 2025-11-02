@@ -17,7 +17,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appshub.sipcalculator_financeplanner.data.entity.*
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalViewModel
+import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.PinViewModel
+import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.PinUiState
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -28,19 +31,24 @@ fun GoalsListScreen(
     onGoalClick: (String) -> Unit,
     onCreateGoal: () -> Unit,
     goalViewModel: GoalViewModel = viewModel(),
+    pinViewModel: PinViewModel? = null,
     modifier: Modifier = Modifier
 ) {
     val goalState by goalViewModel.uiState.collectAsStateWithLifecycle()
+    val pinState by pinViewModel?.uiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(PinUiState()) }
+    var showPinOptions by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
         // Goals are automatically loaded in ViewModel init
+        // PIN settings are automatically loaded in PinViewModel init
     }
     
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    CurrencyProvider { currencyCode ->
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         // Header
         item {
             Row(
@@ -69,8 +77,22 @@ fun GoalsListScreen(
         // Goals Summary
         if (goalState.goals.isNotEmpty()) {
             item {
-                GoalsSummaryCard(goalState.goals)
+                GoalsSummaryCard(goalState.goals, currencyCode)
             }
+        }
+        
+        // PIN Settings Card
+        item {
+            PinSettingsCard(
+                isPinEnabled = pinState.isPinEnabled,
+                onTogglePin = { enabled ->
+                    if (enabled) {
+                        showPinOptions = true
+                    } else {
+                        pinViewModel?.disablePin()
+                    }
+                }
+            )
         }
         
         // Goals List
@@ -87,7 +109,8 @@ fun GoalsListScreen(
                     onClick = { onGoalClick(goal.goalId) },
                     onStatusChange = { status ->
                         goalViewModel.updateGoalStatus(goal.goalId, status)
-                    }
+                    },
+                    currencyCode = currencyCode
                 )
             }
         }
@@ -115,7 +138,8 @@ fun GoalsListScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -136,10 +160,50 @@ fun GoalsListScreen(
             }
         }
     }
+    }
+    
+    // PIN Setup Dialog
+    if (showPinOptions) {
+        AlertDialog(
+            onDismissRequest = { showPinOptions = false },
+            title = { 
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Security,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text("Enable PIN Protection")
+                }
+            },
+            text = {
+                Text("Secure your financial data with a 4-digit PIN. You'll need to enter this PIN each time you open the app.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPinOptions = false
+                        // Navigate to PIN setup screen would be implemented here
+                        // For now, we'll just show a placeholder
+                    }
+                ) {
+                    Text("Set PIN")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPinOptions = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
-fun GoalsSummaryCard(goals: List<Goal>) {
+fun GoalsSummaryCard(goals: List<Goal>, currencyCode: String) {
     val activeGoals = goals.filter { it.status == GoalStatus.ACTIVE }
     val completedGoals = goals.filter { it.status == GoalStatus.COMPLETED }
     val totalTargetAmount = activeGoals.sumOf { it.targetAmount }
@@ -149,7 +213,8 @@ fun GoalsSummaryCard(goals: List<Goal>) {
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -182,7 +247,7 @@ fun GoalsSummaryCard(goals: List<Goal>) {
                 
                 GoalSummaryMetric(
                     title = "Total Target",
-                    value = formatCurrency(totalTargetAmount),
+                    value = formatCurrency(totalTargetAmount, currencyCode),
                     icon = "💰",
                     modifier = Modifier.weight(1f)
                 )
@@ -247,6 +312,7 @@ fun GoalCard(
     progress: GoalProgress?,
     onClick: () -> Unit,
     onStatusChange: (GoalStatus) -> Unit,
+    currencyCode: String,
     modifier: Modifier = Modifier
 ) {
     val progressPercentage = progress?.progressPercentage ?: 0.0
@@ -265,7 +331,18 @@ fun GoalCard(
                 GoalStatus.PAUSED -> MaterialTheme.colorScheme.surfaceVariant
                 GoalStatus.ACTIVE -> MaterialTheme.colorScheme.surface
             }
-        )
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = when (goal.status) {
+                GoalStatus.COMPLETED -> 8.dp
+                GoalStatus.ACTIVE -> 6.dp
+                GoalStatus.PAUSED -> 3.dp
+            }
+        ),
+        border = when (goal.status) {
+            GoalStatus.COMPLETED -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
+            else -> null
+        }
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -326,7 +403,7 @@ fun GoalCard(
                     )
                     
                     Text(
-                        text = formatCurrency(goal.targetAmount),
+                        text = formatCurrency(goal.targetAmount, currencyCode),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -349,13 +426,13 @@ fun GoalCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = formatCurrency(currentAmount),
+                        text = formatCurrency(currentAmount, currencyCode),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     
                     Text(
-                        text = "${formatCurrency(remainingAmount)} remaining",
+                        text = "${formatCurrency(remainingAmount, currencyCode)} remaining",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -433,7 +510,7 @@ fun GoalCard(
                     )
                     
                     Text(
-                        text = formatCurrency(goal.monthlySipNeeded),
+                        text = formatCurrency(goal.monthlySipNeeded, currencyCode),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -523,7 +600,8 @@ fun EmptyGoalsState(onCreateGoal: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier.padding(32.dp),
@@ -560,6 +638,65 @@ fun EmptyGoalsState(onCreateGoal: () -> Unit) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Create Your First Goal")
             }
+        }
+    }
+}
+
+@Composable
+fun PinSettingsCard(
+    isPinEnabled: Boolean,
+    onTogglePin: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Security,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(24.dp)
+                )
+                
+                Column {
+                    Text(
+                        text = "PIN Protection",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    
+                    Text(
+                        text = if (isPinEnabled) "Your goals are protected" else "Secure your financial data",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+            }
+            
+            Switch(
+                checked = isPinEnabled,
+                onCheckedChange = onTogglePin,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            )
         }
     }
 }

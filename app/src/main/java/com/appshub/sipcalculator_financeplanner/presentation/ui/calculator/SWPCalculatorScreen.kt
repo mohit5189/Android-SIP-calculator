@@ -24,6 +24,7 @@ import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SWPCalcul
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
 import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,10 +36,13 @@ fun SWPCalculatorScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     if (uiState.showDetailedBreakdown && uiState.result != null) {
-        SWPDetailedBreakdownScreen(
-            swpResult = uiState.result!!,
-            onBackClick = { viewModel.hideDetailedBreakdown() }
-        )
+        CurrencyProvider { currencyCode ->
+            SWPDetailedBreakdownScreen(
+                swpResult = uiState.result!!,
+                onBackClick = { viewModel.hideDetailedBreakdown() },
+                currencyCode = currencyCode
+            )
+        }
     } else {
         SWPCalculatorMainScreen(
             uiState = uiState,
@@ -58,7 +62,8 @@ fun SWPCalculatorMainScreen(
 ) {
     val scrollState = rememberScrollState()
     
-    Column(
+    CurrencyProvider { currencyCode ->
+        Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
@@ -73,7 +78,7 @@ fun SWPCalculatorMainScreen(
                 value = uiState.initialCorpus,
                 onValueChange = viewModel::updateInitialCorpus,
                 label = "Initial Investment Corpus",
-                prefix = "₹",
+                prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
                 suggestions = SuggestionData.initialCorpus,
                 helperText = "Total amount you have invested initially",
                 isError = uiState.error != null && uiState.initialCorpus.isEmpty()
@@ -84,7 +89,7 @@ fun SWPCalculatorMainScreen(
                 value = uiState.monthlyWithdrawal,
                 onValueChange = viewModel::updateMonthlyWithdrawal,
                 label = "Monthly Withdrawal",
-                prefix = "₹",
+                prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
                 suggestions = SuggestionData.withdrawalAmounts,
                 helperText = "Amount you want to withdraw each month",
                 isError = uiState.error != null && uiState.monthlyWithdrawal.isEmpty()
@@ -199,6 +204,7 @@ fun SWPCalculatorMainScreen(
             }
         }
     }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -206,6 +212,7 @@ fun SWPCalculatorMainScreen(
 fun SWPDetailedBreakdownScreen(
     swpResult: com.appshub.sipcalculator_financeplanner.data.models.SWPResult,
     onBackClick: () -> Unit,
+    currencyCode: String,
     modifier: Modifier = Modifier
 ) {
     androidx.compose.foundation.lazy.LazyColumn(
@@ -234,7 +241,7 @@ fun SWPDetailedBreakdownScreen(
             
             // Summary Card
             item {
-                SWPSummaryCard(swpResult)
+                SWPSummaryCard(swpResult, currencyCode)
             }
             
             // Warning if corpus will be exhausted
@@ -276,14 +283,14 @@ fun SWPDetailedBreakdownScreen(
             }
             
             itemsIndexed(swpResult.yearWiseData) { _, yearData ->
-                SWPYearCard(yearData = yearData)
+                SWPYearCard(yearData = yearData, currencyCode = currencyCode)
             }
         }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SWPSummaryCard(swpResult: com.appshub.sipcalculator_financeplanner.data.models.SWPResult) {
+fun SWPSummaryCard(swpResult: com.appshub.sipcalculator_financeplanner.data.models.SWPResult, currencyCode: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
@@ -318,12 +325,14 @@ fun SWPSummaryCard(swpResult: com.appshub.sipcalculator_financeplanner.data.mode
                     SWPSummaryItem(
                         title = "Initial Corpus",
                         amount = swpResult.initialCorpus,
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                     
                     SWPSummaryItem(
                         title = "Monthly Withdrawal",
                         amount = swpResult.monthlyWithdrawal,
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -337,12 +346,14 @@ fun SWPSummaryCard(swpResult: com.appshub.sipcalculator_financeplanner.data.mode
                     SWPSummaryItem(
                         title = "Total Withdrawn",
                         amount = swpResult.totalWithdrawn,
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                     
                     SWPSummaryItem(
                         title = "Remaining Corpus",
                         amount = swpResult.remainingCorpus,
+                        currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -355,6 +366,7 @@ fun SWPSummaryCard(swpResult: com.appshub.sipcalculator_financeplanner.data.mode
 fun SWPSummaryItem(
     title: String,
     amount: Double,
+    currencyCode: String,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -365,7 +377,7 @@ fun SWPSummaryItem(
         )
         
         Text(
-            text = formatCurrency(amount),
+            text = formatCurrency(amount, currencyCode),
             style = MaterialTheme.typography.titleMedium,
             color = Color.White,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
@@ -376,7 +388,8 @@ fun SWPSummaryItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SWPYearCard(
-    yearData: com.appshub.sipcalculator_financeplanner.data.models.YearWiseData
+    yearData: com.appshub.sipcalculator_financeplanner.data.models.YearWiseData,
+    currencyCode: String
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     
@@ -414,10 +427,10 @@ fun SWPYearCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SWPYearSummaryItem("Opening", yearData.openingBalance)
-                SWPYearSummaryItem("Withdrawn", kotlin.math.abs(yearData.totalInvestedThisYear))
-                SWPYearSummaryItem("Interest", yearData.interestEarnedThisYear)
-                SWPYearSummaryItem("Closing", yearData.closingBalance)
+                SWPYearSummaryItem("Opening", yearData.openingBalance, currencyCode)
+                SWPYearSummaryItem("Withdrawn", kotlin.math.abs(yearData.totalInvestedThisYear), currencyCode)
+                SWPYearSummaryItem("Interest", yearData.interestEarnedThisYear, currencyCode)
+                SWPYearSummaryItem("Closing", yearData.closingBalance, currencyCode)
             }
             
             // Monthly breakdown (shown when expanded)
@@ -435,7 +448,7 @@ fun SWPYearCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 yearData.monthlyData.forEach { monthlyData ->
-                    SWPMonthlyBreakdownRow(monthlyData)
+                    SWPMonthlyBreakdownRow(monthlyData, currencyCode)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
             }
@@ -444,7 +457,7 @@ fun SWPYearCard(
 }
 
 @Composable
-fun SWPYearSummaryItem(label: String, amount: Double) {
+fun SWPYearSummaryItem(label: String, amount: Double, currencyCode: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
@@ -452,7 +465,7 @@ fun SWPYearSummaryItem(label: String, amount: Double) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = formatCurrency(amount),
+            text = formatCurrency(amount, currencyCode),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
         )
@@ -460,7 +473,7 @@ fun SWPYearSummaryItem(label: String, amount: Double) {
 }
 
 @Composable
-fun SWPMonthlyBreakdownRow(monthlyData: com.appshub.sipcalculator_financeplanner.data.models.MonthlyData) {
+fun SWPMonthlyBreakdownRow(monthlyData: com.appshub.sipcalculator_financeplanner.data.models.MonthlyData, currencyCode: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -479,19 +492,19 @@ fun SWPMonthlyBreakdownRow(monthlyData: com.appshub.sipcalculator_financeplanner
         )
         
         Text(
-            text = formatCurrency(kotlin.math.abs(monthlyData.sipAmount)), // Show withdrawal as positive
+            text = formatCurrency(kotlin.math.abs(monthlyData.sipAmount), currencyCode), // Show withdrawal as positive
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.weight(1f)
         )
         
         Text(
-            text = formatCurrency(monthlyData.interestEarned),
+            text = formatCurrency(monthlyData.interestEarned, currencyCode),
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.weight(1f)
         )
         
         Text(
-            text = formatCurrency(monthlyData.closingBalance),
+            text = formatCurrency(monthlyData.closingBalance, currencyCode),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
             modifier = Modifier.weight(1f)

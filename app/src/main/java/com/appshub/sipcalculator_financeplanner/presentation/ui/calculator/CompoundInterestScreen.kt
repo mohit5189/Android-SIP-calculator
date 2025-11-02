@@ -25,6 +25,7 @@ import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
 import com.appshub.sipcalculator_financeplanner.utils.AdManager
 import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @Composable
 fun CompoundInterestScreen(
@@ -36,18 +37,24 @@ fun CompoundInterestScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     if (uiState.showDetailedBreakdown && uiState.result != null) {
-        CompoundInterestDetailedBreakdownScreen(
-            result = uiState.result!!,
-            onBackClick = { viewModel.hideDetailedBreakdown() }
-        )
+        CurrencyProvider { currencyCode ->
+            CompoundInterestDetailedBreakdownScreen(
+                result = uiState.result!!,
+                onBackClick = { viewModel.hideDetailedBreakdown() },
+                currencyCode = currencyCode
+            )
+        }
     } else {
-        CompoundInterestMainScreen(
-            uiState = uiState,
-            viewModel = viewModel,
-            analyticsManager = analyticsManager,
-            onBackClick = onBackClick,
-            modifier = modifier
-        )
+        CurrencyProvider { currencyCode ->
+            CompoundInterestMainScreen(
+                uiState = uiState,
+                viewModel = viewModel,
+                analyticsManager = analyticsManager,
+                onBackClick = onBackClick,
+                currencyCode = currencyCode,
+                modifier = modifier
+            )
+        }
     }
 }
 
@@ -58,6 +65,7 @@ fun CompoundInterestMainScreen(
     viewModel: CompoundInterestViewModel,
     analyticsManager: FirebaseAnalyticsManager? = null,
     onBackClick: (() -> Unit)? = null,
+    currencyCode: String,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -106,7 +114,7 @@ fun CompoundInterestMainScreen(
                 OutlinedTextField(
                     value = uiState.principal,
                     onValueChange = { viewModel.updatePrincipal(it) },
-                    label = { Text("Principal Amount (₹)") },
+                    label = { Text("Principal Amount (${com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"})") },
                     placeholder = { Text("e.g., 100000") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -212,7 +220,8 @@ fun CompoundInterestMainScreen(
                 onShowDetailedBreakdown = {
                     analyticsManager?.logButtonClick("view_compound_interest_breakdown", "CompoundInterestScreen")
                     viewModel.showDetailedBreakdown()
-                }
+                },
+                currencyCode = currencyCode
             )
         }
     }
@@ -221,7 +230,8 @@ fun CompoundInterestMainScreen(
 @Composable
 fun CompoundInterestResultCard(
     result: CompoundInterestResult,
-    onShowDetailedBreakdown: () -> Unit
+    onShowDetailedBreakdown: () -> Unit,
+    currencyCode: String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -242,7 +252,7 @@ fun CompoundInterestResultCard(
             ) {
                 Text("Principal Amount:")
                 Text(
-                    text = formatCurrency(result.principal),
+                    text = formatCurrency(result.principal, currencyCode),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -296,7 +306,7 @@ fun CompoundInterestResultCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = formatCurrency(result.compoundInterest),
+                    text = formatCurrency(result.compoundInterest, currencyCode),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -311,7 +321,7 @@ fun CompoundInterestResultCard(
                     style = MaterialTheme.typography.titleLarge
                 )
                 Text(
-                    text = formatCurrency(result.maturityAmount),
+                    text = formatCurrency(result.maturityAmount, currencyCode),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -331,7 +341,8 @@ fun CompoundInterestResultCard(
 @Composable
 fun CompoundInterestDetailedBreakdownScreen(
     result: CompoundInterestResult,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    currencyCode: String
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -375,7 +386,7 @@ fun CompoundInterestDetailedBreakdownScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Opening Amount:")
-                            Text(formatCurrency(yearData.openingAmount))
+                            Text(formatCurrency(yearData.openingAmount, currencyCode))
                         }
                         
                         Row(
@@ -383,7 +394,7 @@ fun CompoundInterestDetailedBreakdownScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Interest Earned:")
-                            Text(formatCurrency(yearData.yearlyInterest))
+                            Text(formatCurrency(yearData.yearlyInterest, currencyCode))
                         }
                         
                         Row(
@@ -391,7 +402,7 @@ fun CompoundInterestDetailedBreakdownScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Total Interest:")
-                            Text(formatCurrency(yearData.cumulativeInterest))
+                            Text(formatCurrency(yearData.cumulativeInterest, currencyCode))
                         }
                         
                         Row(
@@ -403,7 +414,7 @@ fun CompoundInterestDetailedBreakdownScreen(
                                 style = MaterialTheme.typography.titleSmall
                             )
                             Text(
-                                text = formatCurrency(yearData.closingAmount),
+                                text = formatCurrency(yearData.closingAmount, currencyCode),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )

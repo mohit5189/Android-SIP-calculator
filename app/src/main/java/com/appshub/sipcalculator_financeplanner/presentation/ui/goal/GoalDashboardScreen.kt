@@ -24,11 +24,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appshub.sipcalculator_financeplanner.data.entity.*
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.*
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
@@ -74,13 +76,14 @@ fun GoalDashboardScreen(
         return
     }
     
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    CurrencyProvider { currencyCode ->
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         // Header
         item {
             GoalDashboardHeader(
@@ -96,7 +99,8 @@ fun GoalDashboardScreen(
         item {
             GoalProgressCard(
                 goal = goal,
-                progress = progress
+                progress = progress,
+                currencyCode = currencyCode
             )
         }
         
@@ -106,7 +110,8 @@ fun GoalDashboardScreen(
                 totalSavings = savingState.totalSavings,
                 totalDebts = debtState.totalDebts,
                 targetAmount = goal.targetAmount,
-                onManageFinances = onManageFinances
+                onManageFinances = onManageFinances,
+                currencyCode = currencyCode
             )
         }
         
@@ -115,7 +120,8 @@ fun GoalDashboardScreen(
             item {
                 SavingsBreakdownCard(
                     savings = savingState.savings,
-                    savingsSummary = savingState.savingsSummary
+                    savingsSummary = savingState.savingsSummary,
+                    currencyCode = currencyCode
                 )
             }
         }
@@ -125,7 +131,8 @@ fun GoalDashboardScreen(
             item {
                 DebtsBreakdownCard(
                     debts = debtState.debts,
-                    debtsSummary = debtState.debtsSummary
+                    debtsSummary = debtState.debtsSummary,
+                    currencyCode = currencyCode
                 )
             }
         }
@@ -135,7 +142,8 @@ fun GoalDashboardScreen(
             progress?.let { 
                 MotivationalInsightsCard(
                     goal = goal,
-                    progress = it
+                    progress = it,
+                    currencyCode = currencyCode
                 )
             }
         }
@@ -178,6 +186,7 @@ fun GoalDashboardScreen(
                 }
             }
         }
+    }
     }
 }
 
@@ -226,7 +235,8 @@ fun GoalDashboardHeader(
 @Composable
 fun GoalProgressCard(
     goal: Goal,
-    progress: GoalProgress?
+    progress: GoalProgress?,
+    currencyCode: String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -252,7 +262,7 @@ fun GoalProgressCard(
                     )
                     
                     Text(
-                        text = formatCurrency(goal.targetAmount),
+                        text = formatCurrency(goal.targetAmount, currencyCode),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -289,7 +299,7 @@ fun GoalProgressCard(
                     )
                     
                     Text(
-                        text = "${formatCurrency(progressData.remainingAmount)} to go",
+                        text = "${formatCurrency(progressData.remainingAmount, currencyCode)} to go",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -318,7 +328,7 @@ fun GoalProgressCard(
                         text = if (progressData.isOnTrack) {
                             "🎉 On track! You're doing great!"
                         } else {
-                            "⚠️ Need ${formatCurrency(progressData.monthlyProgressNeeded)}/month to catch up"
+                            "⚠️ Need ${formatCurrency(progressData.monthlyProgressNeeded, currencyCode)}/month to catch up"
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
@@ -391,27 +401,83 @@ fun FinancialOverviewCard(
     totalSavings: Double,
     totalDebts: Double,
     targetAmount: Double,
-    onManageFinances: () -> Unit
+    onManageFinances: () -> Unit,
+    currencyCode: String
 ) {
     val netWorth = totalSavings - totalDebts
     
+    // Animation states
+    val animationState = remember { mutableStateOf(false) }
+    val cardScale by animateFloatAsState(
+        targetValue = if (animationState.value) 1f else 0.8f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "cardScale"
+    )
+    
+    val cardAlpha by animateFloatAsState(
+        targetValue = if (animationState.value) 1f else 0f,
+        animationSpec = tween(durationMillis = 600),
+        label = "cardAlpha"
+    )
+    
+    LaunchedEffect(Unit) {
+        delay(100) // Small delay for better effect
+        animationState.value = true
+    }
+    
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer(
+                scaleX = cardScale,
+                scaleY = cardScale,
+                alpha = cardAlpha
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Animated title with shimmer effect
+            val shimmerAnimation = rememberInfiniteTransition(label = "shimmer")
+            val shimmerAlpha by shimmerAnimation.animateFloat(
+                initialValue = 0.2f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "shimmerAlpha"
+            )
+            
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "💰 Financial Overview",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "💰",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.graphicsLayer(alpha = shimmerAlpha)
+                    )
+                    Text(
+                        text = "Financial Overview",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
                 
                 TextButton(onClick = onManageFinances) {
                     Text("Manage")
@@ -433,6 +499,7 @@ fun FinancialOverviewCard(
                     amount = totalSavings,
                     icon = "💎",
                     color = MaterialTheme.colorScheme.primary,
+                    currencyCode = currencyCode,
                     modifier = Modifier.weight(1f)
                 )
                 
@@ -441,6 +508,7 @@ fun FinancialOverviewCard(
                     amount = totalDebts,
                     icon = "💸",
                     color = MaterialTheme.colorScheme.error,
+                    currencyCode = currencyCode,
                     modifier = Modifier.weight(1f)
                 )
                 
@@ -453,6 +521,7 @@ fun FinancialOverviewCard(
                     } else {
                         MaterialTheme.colorScheme.error
                     },
+                    currencyCode = currencyCode,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -466,37 +535,94 @@ fun FinancialMetricCard(
     amount: Double,
     icon: String,
     color: Color,
+    currencyCode: String,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+    // Individual animations for each metric card
+    val animationState = remember { mutableStateOf(false) }
+    val slideOffset by animateIntAsState(
+        targetValue = if (animationState.value) 0 else 100,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "slideOffset"
+    )
+    
+    val iconScale by animateFloatAsState(
+        targetValue = if (animationState.value) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "iconScale"
+    )
+    
+    // Pulsing animation for the icon
+    val pulseAnimation = rememberInfiniteTransition(label = "pulse")
+    val iconPulse by pulseAnimation.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "iconPulse"
+    )
+    
+    LaunchedEffect(Unit) {
+        delay(200) // Staggered animation
+        animationState.value = true
+    }
+    
+    Card(
+        modifier = modifier
+            .padding(4.dp)
+            .offset(y = slideOffset.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Text(
-            text = icon,
-            style = MaterialTheme.typography.headlineSmall
-        )
-        
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        
-        Text(
-            text = formatCurrency(amount),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = color
-        )
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = icon,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.graphicsLayer(
+                    scaleX = iconScale * iconPulse,
+                    scaleY = iconScale * iconPulse,
+                    shadowElevation = 4f,
+                    clip = false
+                )
+            )
+            
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium
+            )
+            
+            Text(
+                text = formatCurrency(amount, currencyCode),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+        }
     }
 }
 
 @Composable
 fun SavingsBreakdownCard(
     savings: List<Saving>,
-    savingsSummary: List<com.appshub.sipcalculator_financeplanner.data.dao.SavingsSummary>
+    savingsSummary: List<com.appshub.sipcalculator_financeplanner.data.dao.SavingsSummary>,
+    currencyCode: String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -519,7 +645,8 @@ fun SavingsBreakdownCard(
                 SavingBreakdownItem(
                     category = summary.category,
                     amount = summary.total,
-                    percentage = percentage
+                    percentage = percentage,
+                    currencyCode = currencyCode
                 )
             }
         }
@@ -530,7 +657,8 @@ fun SavingsBreakdownCard(
 fun SavingBreakdownItem(
     category: SavingCategory,
     amount: Double,
-    percentage: Double
+    percentage: Double,
+    currencyCode: String
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -558,7 +686,7 @@ fun SavingBreakdownItem(
         
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = formatCurrency(amount),
+                text = formatCurrency(amount, currencyCode),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -575,7 +703,8 @@ fun SavingBreakdownItem(
 @Composable
 fun DebtsBreakdownCard(
     debts: List<Debt>,
-    debtsSummary: List<com.appshub.sipcalculator_financeplanner.data.dao.DebtsSummary>
+    debtsSummary: List<com.appshub.sipcalculator_financeplanner.data.dao.DebtsSummary>,
+    currencyCode: String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -602,7 +731,8 @@ fun DebtsBreakdownCard(
                 DebtBreakdownItem(
                     debtType = summary.debtType,
                     amount = summary.total,
-                    percentage = percentage
+                    percentage = percentage,
+                    currencyCode = currencyCode
                 )
             }
         }
@@ -613,7 +743,8 @@ fun DebtsBreakdownCard(
 fun DebtBreakdownItem(
     debtType: DebtType,
     amount: Double,
-    percentage: Double
+    percentage: Double,
+    currencyCode: String
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -641,7 +772,7 @@ fun DebtBreakdownItem(
         
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = formatCurrency(amount),
+                text = formatCurrency(amount, currencyCode),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.error
@@ -659,9 +790,10 @@ fun DebtBreakdownItem(
 @Composable
 fun MotivationalInsightsCard(
     goal: Goal,
-    progress: GoalProgress
+    progress: GoalProgress,
+    currencyCode: String
 ) {
-    val insights = generateInsights(goal, progress)
+    val insights = generateInsights(goal, progress, currencyCode)
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -706,7 +838,7 @@ fun InsightItem(insight: String) {
     }
 }
 
-fun generateInsights(goal: Goal, progress: GoalProgress): List<String> {
+fun generateInsights(goal: Goal, progress: GoalProgress, currencyCode: String): List<String> {
     val insights = mutableListOf<String>()
     
     when {
@@ -714,7 +846,7 @@ fun generateInsights(goal: Goal, progress: GoalProgress): List<String> {
             insights.add("🎉 Congratulations! You've achieved your goal!")
         }
         progress.progressPercentage >= 75 -> {
-            insights.add("🔥 You're in the final stretch! Just ${formatCurrency(progress.remainingAmount)} to go!")
+            insights.add("🔥 You're in the final stretch! Just ${formatCurrency(progress.remainingAmount, currencyCode)} to go!")
             insights.add("💪 Keep up the momentum - you're almost there!")
         }
         progress.progressPercentage >= 50 -> {
@@ -732,7 +864,7 @@ fun generateInsights(goal: Goal, progress: GoalProgress): List<String> {
     }
     
     if (!progress.isOnTrack && progress.monthsToGo > 0) {
-        insights.add("⚡ To get back on track, try investing ${formatCurrency(progress.monthlyProgressNeeded)} per month.")
+        insights.add("⚡ To get back on track, try investing ${formatCurrency(progress.monthlyProgressNeeded, currencyCode)} per month.")
     }
     
     if (progress.monthsToGo <= 12) {

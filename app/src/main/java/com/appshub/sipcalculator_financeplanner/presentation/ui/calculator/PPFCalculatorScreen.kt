@@ -22,6 +22,7 @@ import com.appshub.sipcalculator_financeplanner.utils.AdManager
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.FinancialCalculator
 import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +37,8 @@ fun PPFCalculatorScreen(
     
     val context = LocalContext.current
     
-    Column(
+    CurrencyProvider { currencyCode ->
+        Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
@@ -85,7 +87,7 @@ fun PPFCalculatorScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "• Fixed 15-year tenure\n• Minimum: ₹500, Maximum: ₹1.5L per year\n• Tax-free returns under Section 80C\n• Interest rate is set by Government (currently 7.1%)",
+                        text = "• Fixed 15-year tenure\n• Minimum: ${com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"}500, Maximum: ${com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"}1.5L per year\n• Tax-free returns under Section 80C\n• Interest rate is set by Government (currently 7.1%)",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
@@ -104,8 +106,8 @@ fun PPFCalculatorScreen(
                 OutlinedTextField(
                     value = yearlyDeposit,
                     onValueChange = { yearlyDeposit = it },
-                    label = { Text("Yearly Deposit (₹500 - ₹1,50,000)") },
-                    placeholder = { Text("₹1,50,000") },
+                    label = { Text("Yearly Deposit (${com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"}500 - ${com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"}1,50,000)") },
+                    placeholder = { Text("${com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"}1,50,000") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
@@ -184,7 +186,7 @@ fun PPFCalculatorScreen(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = formatCurrency(ppfResult.maturityAmount),
+                            text = formatCurrency(ppfResult.maturityAmount, currencyCode),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -198,7 +200,7 @@ fun PPFCalculatorScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Yearly Deposit:")
-                        Text(formatCurrency(ppfResult.yearlyDeposit))
+                        Text(formatCurrency(ppfResult.yearlyDeposit, currencyCode))
                     }
                     
                     Row(
@@ -206,7 +208,7 @@ fun PPFCalculatorScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Total Deposits:")
-                        Text(formatCurrency(ppfResult.totalDeposits))
+                        Text(formatCurrency(ppfResult.totalDeposits, currencyCode))
                     }
                     
                     Row(
@@ -215,7 +217,7 @@ fun PPFCalculatorScreen(
                     ) {
                         Text("Total Interest Earned:")
                         Text(
-                            text = formatCurrency(ppfResult.totalInterest),
+                            text = formatCurrency(ppfResult.totalInterest, currencyCode),
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -252,4 +254,4 @@ fun PPFCalculatorScreen(
             }
         }
     }
-}
+}}

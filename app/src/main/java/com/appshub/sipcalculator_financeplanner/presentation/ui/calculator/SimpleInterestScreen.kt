@@ -24,6 +24,7 @@ import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
 import com.appshub.sipcalculator_financeplanner.utils.AdManager
 import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @Composable
 fun SimpleInterestScreen(
@@ -35,18 +36,24 @@ fun SimpleInterestScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     if (uiState.showDetailedBreakdown && uiState.result != null) {
-        SimpleInterestDetailedBreakdownScreen(
-            result = uiState.result!!,
-            onBackClick = { viewModel.hideDetailedBreakdown() }
-        )
+        CurrencyProvider { currencyCode ->
+            SimpleInterestDetailedBreakdownScreen(
+                result = uiState.result!!,
+                onBackClick = { viewModel.hideDetailedBreakdown() },
+                currencyCode = currencyCode
+            )
+        }
     } else {
-        SimpleInterestMainScreen(
-            uiState = uiState,
-            viewModel = viewModel,
-            analyticsManager = analyticsManager,
-            onBackClick = onBackClick,
-            modifier = modifier
-        )
+        CurrencyProvider { currencyCode ->
+            SimpleInterestMainScreen(
+                uiState = uiState,
+                viewModel = viewModel,
+                analyticsManager = analyticsManager,
+                onBackClick = onBackClick,
+                currencyCode = currencyCode,
+                modifier = modifier
+            )
+        }
     }
 }
 
@@ -57,6 +64,7 @@ fun SimpleInterestMainScreen(
     viewModel: SimpleInterestViewModel,
     analyticsManager: FirebaseAnalyticsManager? = null,
     onBackClick: (() -> Unit)? = null,
+    currencyCode: String,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -105,7 +113,7 @@ fun SimpleInterestMainScreen(
                 OutlinedTextField(
                     value = uiState.principal,
                     onValueChange = { viewModel.updatePrincipal(it) },
-                    label = { Text("Principal Amount (₹)") },
+                    label = { Text("Principal Amount (${com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"})") },
                     placeholder = { Text("e.g., 100000") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -177,7 +185,8 @@ fun SimpleInterestMainScreen(
                 onShowDetailedBreakdown = {
                     analyticsManager?.logButtonClick("view_simple_interest_breakdown", "SimpleInterestScreen")
                     viewModel.showDetailedBreakdown()
-                }
+                },
+                currencyCode = currencyCode
             )
         }
     }
@@ -186,7 +195,8 @@ fun SimpleInterestMainScreen(
 @Composable
 fun SimpleInterestResultCard(
     result: SimpleInterestResult,
-    onShowDetailedBreakdown: () -> Unit
+    onShowDetailedBreakdown: () -> Unit,
+    currencyCode: String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -207,7 +217,7 @@ fun SimpleInterestResultCard(
             ) {
                 Text("Principal Amount:")
                 Text(
-                    text = formatCurrency(result.principal),
+                    text = formatCurrency(result.principal, currencyCode),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -245,7 +255,7 @@ fun SimpleInterestResultCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = formatCurrency(result.simpleInterest),
+                    text = formatCurrency(result.simpleInterest, currencyCode),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -260,7 +270,7 @@ fun SimpleInterestResultCard(
                     style = MaterialTheme.typography.titleLarge
                 )
                 Text(
-                    text = formatCurrency(result.maturityAmount),
+                    text = formatCurrency(result.maturityAmount, currencyCode),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -280,7 +290,8 @@ fun SimpleInterestResultCard(
 @Composable
 fun SimpleInterestDetailedBreakdownScreen(
     result: SimpleInterestResult,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    currencyCode: String
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -324,7 +335,7 @@ fun SimpleInterestDetailedBreakdownScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Yearly Interest:")
-                            Text(formatCurrency(yearData.yearlyInterest))
+                            Text(formatCurrency(yearData.yearlyInterest, currencyCode))
                         }
                         
                         Row(
@@ -332,7 +343,7 @@ fun SimpleInterestDetailedBreakdownScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Total Interest:")
-                            Text(formatCurrency(yearData.cumulativeInterest))
+                            Text(formatCurrency(yearData.cumulativeInterest, currencyCode))
                         }
                         
                         Row(
@@ -344,7 +355,7 @@ fun SimpleInterestDetailedBreakdownScreen(
                                 style = MaterialTheme.typography.titleSmall
                             )
                             Text(
-                                text = formatCurrency(yearData.totalAmount),
+                                text = formatCurrency(yearData.totalAmount, currencyCode),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )

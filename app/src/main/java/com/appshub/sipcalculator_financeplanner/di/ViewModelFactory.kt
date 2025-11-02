@@ -15,7 +15,8 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
             goalDao = database.goalDao(),
             savingDao = database.savingDao(),
             debtDao = database.debtDao(),
-            goalHistoryDao = database.goalHistoryDao()
+            goalHistoryDao = database.goalHistoryDao(),
+            appSettingsDao = database.appSettingsDao()
         )
     }
     
@@ -26,6 +27,7 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
             SavingViewModel::class.java -> SavingViewModel(repository) as T
             DebtViewModel::class.java -> DebtViewModel(repository) as T
             GoalHistoryViewModel::class.java -> GoalHistoryViewModel(repository) as T
+            PinViewModel::class.java -> PinViewModel(repository) as T
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
     }

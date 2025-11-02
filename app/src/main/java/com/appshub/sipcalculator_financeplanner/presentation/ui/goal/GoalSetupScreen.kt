@@ -2,6 +2,7 @@ package com.appshub.sipcalculator_financeplanner.presentation.ui.goal
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -10,7 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,10 +39,12 @@ fun GoalSetupScreen(
     var showDropdown by remember { mutableStateOf(false) }
     
     val scrollState = rememberScrollState()
+    val focusManager = LocalFocusManager.current
     
     Column(
         modifier = modifier
             .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars)
             .verticalScroll(scrollState)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -132,6 +137,13 @@ fun GoalSetupScreen(
                 label = { Text("Goal Name") },
                 placeholder = { Text("e.g., Dream House, Car, Retirement") },
                 modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.clearFocus() }
+                ),
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Flag,

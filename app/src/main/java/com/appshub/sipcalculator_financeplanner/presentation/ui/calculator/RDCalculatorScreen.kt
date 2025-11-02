@@ -21,6 +21,7 @@ import com.appshub.sipcalculator_financeplanner.utils.AdManager
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.FinancialCalculator
 import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +37,8 @@ fun RDCalculatorScreen(
     
     val context = LocalContext.current
     
-    Column(
+    CurrencyProvider { currencyCode ->
+        Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
@@ -72,7 +74,7 @@ fun RDCalculatorScreen(
                     value = monthlyDeposit,
                     onValueChange = { monthlyDeposit = it },
                     label = { Text("Monthly Deposit") },
-                    placeholder = { Text("₹5,000") },
+                    placeholder = { Text("${com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"}5,000") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
@@ -160,7 +162,7 @@ fun RDCalculatorScreen(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = formatCurrency(rdResult.maturityAmount),
+                            text = formatCurrency(rdResult.maturityAmount, currencyCode),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -174,7 +176,7 @@ fun RDCalculatorScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Monthly Deposit:")
-                        Text(formatCurrency(rdResult.monthlyDeposit))
+                        Text(formatCurrency(rdResult.monthlyDeposit, currencyCode))
                     }
                     
                     Row(
@@ -182,7 +184,7 @@ fun RDCalculatorScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Total Deposits:")
-                        Text(formatCurrency(rdResult.totalDeposits))
+                        Text(formatCurrency(rdResult.totalDeposits, currencyCode))
                     }
                     
                     Row(
@@ -191,7 +193,7 @@ fun RDCalculatorScreen(
                     ) {
                         Text("Total Interest Earned:")
                         Text(
-                            text = formatCurrency(rdResult.totalInterest),
+                            text = formatCurrency(rdResult.totalInterest, currencyCode),
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -216,4 +218,4 @@ fun RDCalculatorScreen(
             }
         }
     }
-}
+}}

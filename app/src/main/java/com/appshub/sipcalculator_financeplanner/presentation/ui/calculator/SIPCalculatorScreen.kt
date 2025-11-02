@@ -21,6 +21,7 @@ import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SIPCalcul
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
 import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +56,8 @@ fun SIPCalculatorMainScreen(
 ) {
     val scrollState = rememberScrollState()
     
-    Column(
+    CurrencyProvider { currencyCode ->
+        Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
@@ -70,7 +72,7 @@ fun SIPCalculatorMainScreen(
                 value = uiState.monthlyInvestment,
                 onValueChange = viewModel::updateMonthlyInvestment,
                 label = "Monthly Investment",
-                prefix = "₹",
+                prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
                 suggestions = SuggestionData.monthlyAmounts,
                 helperText = "Amount to invest every month",
                 isError = uiState.error != null && uiState.monthlyInvestment.isEmpty()
@@ -223,7 +225,7 @@ fun SIPCalculatorMainScreen(
                         Math.pow(1 + result.stepUpPercentage / 100, result.durationInYears.toDouble())
                     
                     Text(
-                        text = "Final monthly SIP: ${formatCurrency(finalMonthlyAmount)}",
+                        text = "Final monthly SIP: ${formatCurrency(finalMonthlyAmount, currencyCode)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f)
                     )
@@ -270,4 +272,4 @@ fun SIPCalculatorMainScreen(
             }
         }
     }
-}
+}}
