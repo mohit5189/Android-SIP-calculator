@@ -21,6 +21,8 @@ import com.appshub.sipcalculator_financeplanner.data.entity.*
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.InputCard
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SavingViewModel
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.DebtViewModel
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
+import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +49,8 @@ fun FinancialSetupScreen(
     }
     
     val scrollState = rememberScrollState()
+    
+    CurrencyProvider { currencyCode ->
     
     Column(
         modifier = modifier
@@ -150,7 +154,8 @@ fun FinancialSetupScreen(
         // Summary Card
         FinancialSummaryCard(
             totalSavings = savingState.totalSavings,
-            totalDebts = debtState.totalDebts
+            totalDebts = debtState.totalDebts,
+            currencyCode = currencyCode
         )
         
         // Complete Setup Button
@@ -226,7 +231,7 @@ fun FinancialSetupScreen(
             onDismissRequest = { savingToDelete = null },
             title = { Text("Delete Saving") },
             text = {
-                Text("Are you sure you want to delete this ${saving.category.getDisplayName().lowercase()} investment of ₹${String.format("%.0f", saving.amount)}?")
+                Text("Are you sure you want to delete this ${saving.category.getDisplayName().lowercase()} investment of ${formatCurrency(saving.amount, currencyCode)}?")
             },
             confirmButton = {
                 Button(
@@ -257,7 +262,7 @@ fun FinancialSetupScreen(
             onDismissRequest = { debtToDelete = null },
             title = { Text("Delete Debt") },
             text = {
-                Text("Are you sure you want to delete this ${debt.debtType.getDisplayName().lowercase()} debt of ₹${String.format("%.0f", debt.amount)}?")
+                Text("Are you sure you want to delete this ${debt.debtType.getDisplayName().lowercase()} debt of ${formatCurrency(debt.amount, currencyCode)}?")
             },
             confirmButton = {
                 Button(
@@ -280,6 +285,7 @@ fun FinancialSetupScreen(
                 }
             }
         )
+    }
     }
 }
 
@@ -422,7 +428,8 @@ fun DebtsTab(
 @Composable
 fun FinancialSummaryCard(
     totalSavings: Double,
-    totalDebts: Double
+    totalDebts: Double,
+    currencyCode: String
 ) {
     val netWorth = totalSavings - totalDebts
     
@@ -466,7 +473,7 @@ fun FinancialSummaryCard(
                         }
                     )
                     Text(
-                        text = "₹${String.format("%.0f", totalSavings)}",
+                        text = formatCurrency(totalSavings, currencyCode),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (netWorth >= 0) {
@@ -488,7 +495,7 @@ fun FinancialSummaryCard(
                         }
                     )
                     Text(
-                        text = "₹${String.format("%.0f", totalDebts)}",
+                        text = formatCurrency(totalDebts, currencyCode),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (netWorth >= 0) {
@@ -525,7 +532,7 @@ fun FinancialSummaryCard(
                 )
                 
                 Text(
-                    text = "₹${String.format("%.0f", netWorth)}",
+                    text = formatCurrency(netWorth, currencyCode),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = if (netWorth >= 0) {

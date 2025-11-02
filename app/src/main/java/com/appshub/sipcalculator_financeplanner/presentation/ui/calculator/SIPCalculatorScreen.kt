@@ -73,7 +73,7 @@ fun SIPCalculatorMainScreen(
                 onValueChange = viewModel::updateMonthlyInvestment,
                 label = "Monthly Investment",
                 prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
-                suggestions = SuggestionData.monthlyAmounts,
+                suggestions = SuggestionData.monthlyAmounts(com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"),
                 helperText = "Amount to invest every month",
                 isError = uiState.error != null && uiState.monthlyInvestment.isEmpty()
             )

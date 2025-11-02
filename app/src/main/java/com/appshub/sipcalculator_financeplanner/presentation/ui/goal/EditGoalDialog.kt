@@ -17,6 +17,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.appshub.sipcalculator_financeplanner.data.entity.*
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
+import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import java.util.*
 import java.text.SimpleDateFormat
 
@@ -31,6 +33,8 @@ fun EditGoalDialog(
     var description by remember { mutableStateOf(goal.description) }
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
+    
+    CurrencyProvider { currencyCode ->
     
     Column(
         modifier = Modifier
@@ -158,7 +162,7 @@ fun EditGoalDialog(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "₹${String.format("%,.0f", goal.targetAmount)}",
+                            text = formatCurrency(goal.targetAmount, currencyCode),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -231,5 +235,6 @@ fun EditGoalDialog(
                 Text("Save Changes")
             }
         }
+    }
     }
 }

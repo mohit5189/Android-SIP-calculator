@@ -79,7 +79,7 @@ fun SWPCalculatorMainScreen(
                 onValueChange = viewModel::updateInitialCorpus,
                 label = "Initial Investment Corpus",
                 prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
-                suggestions = SuggestionData.initialCorpus,
+                suggestions = SuggestionData.initialCorpus(com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"),
                 helperText = "Total amount you have invested initially",
                 isError = uiState.error != null && uiState.initialCorpus.isEmpty()
             )
@@ -90,7 +90,7 @@ fun SWPCalculatorMainScreen(
                 onValueChange = viewModel::updateMonthlyWithdrawal,
                 label = "Monthly Withdrawal",
                 prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
-                suggestions = SuggestionData.withdrawalAmounts,
+                suggestions = SuggestionData.withdrawalAmounts(com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"),
                 helperText = "Amount you want to withdraw each month",
                 isError = uiState.error != null && uiState.monthlyWithdrawal.isEmpty()
             )

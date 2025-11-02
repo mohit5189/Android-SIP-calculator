@@ -84,7 +84,7 @@ fun GoalCalculatorMainScreen(
                 onValueChange = viewModel::updateTargetAmount,
                 label = "Target Goal Amount",
                 prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
-                suggestions = SuggestionData.goalAmounts,
+                suggestions = SuggestionData.goalAmounts(com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"),
                 helperText = "How much money do you need?",
                 isError = uiState.error != null && uiState.targetAmount.isEmpty()
             )
@@ -106,7 +106,7 @@ fun GoalCalculatorMainScreen(
                 onValueChange = viewModel::updateInitialAmount,
                 label = "Initial Lump Sum (Optional)",
                 prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
-                suggestions = SuggestionData.initialCorpus,
+                suggestions = SuggestionData.initialCorpus(com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"),
                 helperText = "Any amount you already have or can invest now"
             )
             
@@ -256,8 +256,14 @@ fun GoalDetailedBreakdownScreen(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 8.dp,
+                            pressedElevation = 12.dp,
+                            focusedElevation = 10.dp,
+                            hoveredElevation = 10.dp
                         )
                     ) {
                         Icon(

@@ -23,6 +23,8 @@ import java.util.*
 import com.appshub.sipcalculator_financeplanner.data.entity.*
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.InputCard
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalViewModel
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
+import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +42,8 @@ fun GoalSetupScreen(
     
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
+    
+    CurrencyProvider { currencyCode ->
     
     Column(
         modifier = modifier
@@ -98,7 +102,7 @@ fun GoalSetupScreen(
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
-                            text = "₹${String.format("%.0f", goalResult.targetAmount)}",
+                            text = formatCurrency(goalResult.targetAmount, currencyCode),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -112,7 +116,7 @@ fun GoalSetupScreen(
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
-                            text = "₹${String.format("%.0f", goalResult.requiredMonthlySIP)}",
+                            text = formatCurrency(goalResult.requiredMonthlySIP, currencyCode),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -301,6 +305,7 @@ fun GoalSetupScreen(
                 style = MaterialTheme.typography.titleMedium
             )
         }
+    }
     }
 }
 

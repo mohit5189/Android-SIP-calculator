@@ -436,7 +436,12 @@ fun FinancialOverviewCard(
                 scaleY = cardScale,
                 alpha = cardAlpha
             ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 12.dp,
+            pressedElevation = 16.dp,
+            focusedElevation = 14.dp,
+            hoveredElevation = 14.dp
+        ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         )
@@ -579,7 +584,12 @@ fun FinancialMetricCard(
         modifier = modifier
             .padding(4.dp)
             .offset(y = slideOffset.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp,
+            pressedElevation = 12.dp,
+            focusedElevation = 10.dp,
+            hoveredElevation = 10.dp
+        ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),

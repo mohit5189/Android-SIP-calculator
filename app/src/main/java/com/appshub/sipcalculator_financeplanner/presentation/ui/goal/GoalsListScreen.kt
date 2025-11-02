@@ -19,6 +19,7 @@ import com.appshub.sipcalculator_financeplanner.data.entity.*
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalViewModel
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.PinViewModel
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.PinUiState
+import com.appshub.sipcalculator_financeplanner.presentation.ui.pin.PinScreen
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 import java.text.SimpleDateFormat
@@ -37,18 +38,29 @@ fun GoalsListScreen(
     val goalState by goalViewModel.uiState.collectAsStateWithLifecycle()
     val pinState by pinViewModel?.uiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(PinUiState()) }
     var showPinOptions by remember { mutableStateOf(false) }
+    var showPinSetup by remember { mutableStateOf(false) }
+    var showPinVerification by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
         // Goals are automatically loaded in ViewModel init
         // PIN settings are automatically loaded in PinViewModel init
     }
     
-    CurrencyProvider { currencyCode ->
-        LazyColumn(
-            modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+    // Check authentication on screen entry
+    LaunchedEffect(pinState.isPinEnabled) {
+        if (pinState.isPinEnabled && !pinState.isAuthenticated) {
+            showPinVerification = true
+        }
+    }
+    
+    // Only show main content when not showing PIN screens
+    if (!showPinSetup && !showPinVerification) {
+        CurrencyProvider { currencyCode ->
+            LazyColumn(
+                modifier = modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
         // Header
         item {
             Row(
@@ -139,7 +151,11 @@ fun GoalsListScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 6.dp,
+                        pressedElevation = 8.dp,
+                        focusedElevation = 7.dp
+                    )
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -161,6 +177,7 @@ fun GoalsListScreen(
         }
     }
     }
+    }
     
     // PIN Setup Dialog
     if (showPinOptions) {
@@ -180,14 +197,13 @@ fun GoalsListScreen(
                 }
             },
             text = {
-                Text("Secure your financial data with a 4-digit PIN. You'll need to enter this PIN each time you open the app.")
+                Text("Secure your financial data with a 4-digit PIN. You'll need to enter this PIN each time you open this screen.")
             },
             confirmButton = {
                 Button(
                     onClick = {
                         showPinOptions = false
-                        // Navigate to PIN setup screen would be implemented here
-                        // For now, we'll just show a placeholder
+                        showPinSetup = true
                     }
                 ) {
                     Text("Set PIN")
@@ -199,6 +215,45 @@ fun GoalsListScreen(
                 }
             }
         )
+    }
+    
+    // PIN Setup Screen
+    if (showPinSetup) {
+        PinScreen(
+            isSetupMode = true,
+            onPinEntered = { pin ->
+                if (pin.isEmpty()) {
+                    // User cancelled PIN setup
+                    showPinSetup = false
+                } else {
+                    pinViewModel?.setupPin(pin)
+                    showPinSetup = false
+                }
+            },
+            onForgotPin = { /* Not used in setup mode */ }
+        )
+    }
+    
+    // PIN Verification Screen
+    if (showPinVerification) {
+        PinScreen(
+            isSetupMode = false,
+            onPinEntered = { pin ->
+                pinViewModel?.authenticatePin(pin)
+            },
+            onForgotPin = {
+                // Handle forgot PIN - could reset PIN or show recovery options
+                pinViewModel?.disablePin()
+                showPinVerification = false
+            }
+        )
+    }
+    
+    // Hide verification screen when authentication is successful
+    LaunchedEffect(pinState.isAuthenticated) {
+        if (pinState.isAuthenticated && showPinVerification) {
+            showPinVerification = false
+        }
     }
 }
 
@@ -214,7 +269,12 @@ fun GoalsSummaryCard(goals: List<Goal>, currencyCode: String) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp,
+            pressedElevation = 12.dp,
+            focusedElevation = 10.dp,
+            hoveredElevation = 10.dp
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -334,9 +394,24 @@ fun GoalCard(
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = when (goal.status) {
-                GoalStatus.COMPLETED -> 8.dp
-                GoalStatus.ACTIVE -> 6.dp
-                GoalStatus.PAUSED -> 3.dp
+                GoalStatus.COMPLETED -> 12.dp
+                GoalStatus.ACTIVE -> 8.dp
+                GoalStatus.PAUSED -> 4.dp
+            },
+            pressedElevation = when (goal.status) {
+                GoalStatus.COMPLETED -> 16.dp
+                GoalStatus.ACTIVE -> 12.dp
+                GoalStatus.PAUSED -> 6.dp
+            },
+            focusedElevation = when (goal.status) {
+                GoalStatus.COMPLETED -> 14.dp
+                GoalStatus.ACTIVE -> 10.dp
+                GoalStatus.PAUSED -> 5.dp
+            },
+            hoveredElevation = when (goal.status) {
+                GoalStatus.COMPLETED -> 14.dp
+                GoalStatus.ACTIVE -> 10.dp
+                GoalStatus.PAUSED -> 5.dp
             }
         ),
         border = when (goal.status) {
@@ -601,7 +676,11 @@ fun EmptyGoalsState(onCreateGoal: () -> Unit) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp,
+            pressedElevation = 8.dp,
+            focusedElevation = 7.dp
+        )
     ) {
         Column(
             modifier = Modifier.padding(32.dp),
@@ -653,7 +732,11 @@ fun PinSettingsCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp,
+            pressedElevation = 8.dp,
+            focusedElevation = 7.dp
+        )
     ) {
         Row(
             modifier = Modifier

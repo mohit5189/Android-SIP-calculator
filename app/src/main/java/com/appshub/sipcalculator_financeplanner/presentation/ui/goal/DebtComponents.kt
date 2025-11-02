@@ -13,6 +13,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.appshub.sipcalculator_financeplanner.data.entity.*
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
+import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,6 +26,7 @@ fun DebtCard(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    CurrencyProvider { currencyCode ->
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -54,7 +57,7 @@ fun DebtCard(
                 )
                 
                 Text(
-                    text = "₹${String.format("%.0f", debt.amount)}",
+                    text = formatCurrency(debt.amount, currencyCode),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.error
@@ -62,7 +65,7 @@ fun DebtCard(
                 
                 if (debt.emiAmount > 0) {
                     Text(
-                        text = "EMI: ₹${String.format("%.0f", debt.emiAmount)}/month",
+                        text = "EMI: ${formatCurrency(debt.emiAmount, currencyCode)}/month",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -110,6 +113,7 @@ fun DebtCard(
             }
         }
     }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,6 +122,8 @@ fun AddDebtDialog(
     onDismiss: () -> Unit,
     onSave: (DebtType, Double, Double, Double, String, String) -> Unit
 ) {
+    CurrencyProvider { currencyCode ->
+        val currencySymbol = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"
     var selectedDebtType by remember { mutableStateOf(DebtType.PERSONAL_LOAN) }
     var amount by remember { mutableStateOf("") }
     var emiAmount by remember { mutableStateOf("") }
@@ -209,7 +215,7 @@ fun AddDebtDialog(
                     onValueChange = { amount = it },
                     label = { Text("Outstanding Amount") },
                     placeholder = { Text("0") },
-                    prefix = { Text("₹") },
+                    prefix = { Text(currencySymbol) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -220,7 +226,7 @@ fun AddDebtDialog(
                     onValueChange = { emiAmount = it },
                     label = { Text("Monthly EMI (Optional)") },
                     placeholder = { Text("0") },
-                    prefix = { Text("₹") },
+                    prefix = { Text(currencySymbol) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -279,6 +285,7 @@ fun AddDebtDialog(
             }
         }
     }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -288,6 +295,8 @@ fun EditDebtDialog(
     onDismiss: () -> Unit,
     onSave: (Debt) -> Unit
 ) {
+    CurrencyProvider { currencyCode ->
+        val currencySymbol = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"
     var amount by remember { mutableStateOf(debt.amount.toString()) }
     var emiAmount by remember { mutableStateOf(debt.emiAmount.toString()) }
     var interestRate by remember { mutableStateOf(debt.interestRate.toString()) }
@@ -339,7 +348,7 @@ fun EditDebtDialog(
                     value = amount,
                     onValueChange = { amount = it },
                     label = { Text("Outstanding Amount") },
-                    prefix = { Text("₹") },
+                    prefix = { Text(currencySymbol) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -349,7 +358,7 @@ fun EditDebtDialog(
                     value = emiAmount,
                     onValueChange = { emiAmount = it },
                     label = { Text("Monthly EMI (Optional)") },
-                    prefix = { Text("₹") },
+                    prefix = { Text(currencySymbol) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -412,5 +421,6 @@ fun EditDebtDialog(
                 }
             }
         }
+    }
     }
 }

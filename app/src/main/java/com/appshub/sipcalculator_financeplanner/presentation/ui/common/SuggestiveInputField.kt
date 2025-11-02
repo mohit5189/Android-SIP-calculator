@@ -90,8 +90,8 @@ fun SuggestiveNumberInputField(
 }
 
 object SuggestionData {
-    val monthlyAmounts = listOf(
-        "₹1,000", "₹2,500", "₹5,000", "₹10,000", "₹15,000", "₹25,000", "₹50,000"
+    fun monthlyAmounts(currencySymbol: String) = listOf(
+        "${currencySymbol}1,000", "${currencySymbol}2,500", "${currencySymbol}5,000", "${currencySymbol}10,000", "${currencySymbol}15,000", "${currencySymbol}25,000", "${currencySymbol}50,000"
     )
     
     val durations = listOf(
@@ -106,16 +106,16 @@ object SuggestionData {
         "5%", "10%", "15%", "20%"
     )
     
-    val withdrawalAmounts = listOf(
-        "₹5,000", "₹10,000", "₹25,000", "₹50,000", "₹75,000", "₹1,00,000"
+    fun withdrawalAmounts(currencySymbol: String) = listOf(
+        "${currencySymbol}5,000", "${currencySymbol}10,000", "${currencySymbol}25,000", "${currencySymbol}50,000", "${currencySymbol}75,000", "${currencySymbol}1,00,000"
     )
     
-    val initialCorpus = listOf(
-        "₹5,00,000", "₹10,00,000", "₹25,00,000", "₹50,00,000", "₹1,00,00,000"
+    fun initialCorpus(currencySymbol: String) = listOf(
+        "${currencySymbol}5,00,000", "${currencySymbol}10,00,000", "${currencySymbol}25,00,000", "${currencySymbol}50,00,000", "${currencySymbol}1,00,00,000"
     )
     
-    val goalAmounts = listOf(
-        "₹10,00,000", "₹25,00,000", "₹50,00,000", "₹1,00,00,000", "₹2,00,00,000", "₹5,00,00,000"
+    fun goalAmounts(currencySymbol: String) = listOf(
+        "${currencySymbol}10,00,000", "${currencySymbol}25,00,000", "${currencySymbol}50,00,000", "${currencySymbol}1,00,00,000", "${currencySymbol}2,00,00,000", "${currencySymbol}5,00,00,000"
     )
 }
 

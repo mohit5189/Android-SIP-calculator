@@ -16,6 +16,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.appshub.sipcalculator_financeplanner.data.entity.*
+import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
+import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -27,6 +29,7 @@ fun SavingCard(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    CurrencyProvider { currencyCode ->
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -57,7 +60,7 @@ fun SavingCard(
                 )
                 
                 Text(
-                    text = "₹${String.format("%.0f", saving.amount)}",
+                    text = formatCurrency(saving.amount, currencyCode),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -97,6 +100,7 @@ fun SavingCard(
             }
         }
     }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,6 +109,8 @@ fun AddSavingDialog(
     onDismiss: () -> Unit,
     onSave: (SavingCategory, Double, String, String) -> Unit
 ) {
+    CurrencyProvider { currencyCode ->
+        val currencySymbol = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"
     var selectedCategory by remember { mutableStateOf(SavingCategory.BANK_SAVINGS) }
     var amount by remember { mutableStateOf("") }
     var customName by remember { mutableStateOf("") }
@@ -195,7 +201,7 @@ fun AddSavingDialog(
                     onValueChange = { amount = it },
                     label = { Text("Current Amount") },
                     placeholder = { Text("0") },
-                    prefix = { Text("₹") },
+                    prefix = { Text(currencySymbol) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -246,6 +252,7 @@ fun AddSavingDialog(
             }
         }
     }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -255,6 +262,8 @@ fun EditSavingDialog(
     onDismiss: () -> Unit,
     onSave: (Saving) -> Unit
 ) {
+    CurrencyProvider { currencyCode ->
+        val currencySymbol = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"
     var amount by remember { mutableStateOf(saving.amount.toString()) }
     var customName by remember { mutableStateOf(saving.customCategoryName) }
     var notes by remember { mutableStateOf(saving.notes) }
@@ -304,7 +313,7 @@ fun EditSavingDialog(
                     value = amount,
                     onValueChange = { amount = it },
                     label = { Text("Current Amount") },
-                    prefix = { Text("₹") },
+                    prefix = { Text(currencySymbol) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -352,5 +361,6 @@ fun EditSavingDialog(
                 }
             }
         }
+    }
     }
 }
