@@ -9,36 +9,37 @@ object FinancialCalculator {
         monthlyInvestment: Double,
         annualReturnRate: Double,
         durationInYears: Int,
-        stepUpPercentage: Double = 0.0
+        stepUpPercentage: Double = 0.0,
+        initialLumpsum: Double = 0.0
     ): SIPResult {
         val monthlyReturnRate = annualReturnRate / 12 / 100
         val yearWiseData = mutableListOf<YearWiseData>()
-        
-        var currentBalance = 0.0
-        var totalInvested = 0.0
+
+        var currentBalance = initialLumpsum
+        var totalInvested = initialLumpsum
         var currentMonthlyAmount = monthlyInvestment
-        val monthNames = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+        val monthNames = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-        
+
         for (year in 1..durationInYears) {
             val yearOpeningBalance = currentBalance
             var yearlyInvested = 0.0
             var yearlyInterest = 0.0
             val monthlyDataList = mutableListOf<MonthlyData>()
-            
+
             for (month in 1..12) {
                 val monthOpeningBalance = currentBalance
-                
+
                 // Add monthly investment
                 currentBalance += currentMonthlyAmount
                 yearlyInvested += currentMonthlyAmount
                 totalInvested += currentMonthlyAmount
-                
+
                 // Calculate interest on the balance
                 val interestEarned = currentBalance * monthlyReturnRate
                 currentBalance += interestEarned
                 yearlyInterest += interestEarned
-                
+
                 monthlyDataList.add(
                     MonthlyData(
                         month = month,
@@ -50,9 +51,9 @@ object FinancialCalculator {
                     )
                 )
             }
-            
+
             val cumulativeInterest = currentBalance - totalInvested
-            
+
             yearWiseData.add(
                 YearWiseData(
                     year = year,
@@ -66,13 +67,13 @@ object FinancialCalculator {
                     monthlyData = monthlyDataList
                 )
             )
-            
+
             // Apply step-up for next year
             if (stepUpPercentage > 0) {
                 currentMonthlyAmount *= (1 + stepUpPercentage / 100)
             }
         }
-        
+
         return SIPResult(
             monthlyInvestment = monthlyInvestment,
             totalInvested = totalInvested,
@@ -81,6 +82,7 @@ object FinancialCalculator {
             annualReturnRate = annualReturnRate,
             durationInYears = durationInYears,
             stepUpPercentage = stepUpPercentage,
+            initialLumpsum = initialLumpsum,
             yearWiseData = yearWiseData
         )
     }

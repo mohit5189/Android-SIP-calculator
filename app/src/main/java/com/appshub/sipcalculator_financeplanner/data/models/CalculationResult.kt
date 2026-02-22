@@ -10,6 +10,7 @@ data class SIPResult(
     val annualReturnRate: Double,
     val durationInYears: Int,
     val stepUpPercentage: Double = 0.0,
+    val initialLumpsum: Double = 0.0,
     val yearWiseData: List<YearWiseData>
 )
 

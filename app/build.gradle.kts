@@ -16,8 +16,8 @@ android {
         applicationId = "com.appshub.sipcalculator_financeplanner"
         minSdk = 26
         targetSdk = 35
-        versionCode = 20
-        versionName = "2.1"
+        versionCode = 1
+        versionName = "2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
