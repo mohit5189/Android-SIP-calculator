@@ -32,10 +32,16 @@ import com.appshub.sipcalculator_financeplanner.ui.theme.SIPCalculatorFInancePla
 import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
 import com.appshub.sipcalculator_financeplanner.utils.RatingManager
 import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.google.android.gms.ads.MobileAds
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Initialize MobileAds SDK with your App ID
+        MobileAds.initialize(this) { }
+        // Show App Open Ad on launch
+        AdManager.getInstance().showAppOpenAdIfAvailable(this)
         
         // Initialize UI first to prevent splash screen hanging
         setContent {
