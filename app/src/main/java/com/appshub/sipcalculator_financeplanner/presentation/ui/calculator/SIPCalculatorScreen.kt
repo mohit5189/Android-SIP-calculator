@@ -67,6 +67,16 @@ fun SIPCalculatorMainScreen(
         
         // Input Card
         InputCard(title = "Investment Details") {
+            // Initial Lumpsum Amount
+            SuggestiveNumberInputField(
+                value = uiState.initialLumpsum,
+                onValueChange = viewModel::updateInitialLumpsum,
+                label = "Initial Lumpsum (Optional)",
+                prefix = com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹",
+                suggestions = SuggestionData.lumpsumAmounts(com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo.getCurrencyByCode(currencyCode)?.symbol ?: "₹"),
+                helperText = "Existing investment amount (if any)"
+            )
+
             // Monthly Investment Amount
             SuggestiveNumberInputField(
                 value = uiState.monthlyInvestment,
@@ -77,7 +87,7 @@ fun SIPCalculatorMainScreen(
                 helperText = "Amount to invest every month",
                 isError = uiState.error != null && uiState.monthlyInvestment.isEmpty()
             )
-            
+
             // Duration
             SuggestiveNumberInputField(
                 value = uiState.durationInYears,
@@ -194,6 +204,31 @@ fun SIPCalculatorMainScreen(
                 isLoading = uiState.isCalculating
             ) {
                 // Additional info for SIP
+                if (result.initialLumpsum > 0) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Including initial lumpsum: ${formatCurrency(result.initialLumpsum, currencyCode)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f)
+                            )
+                        }
+                    }
+                }
+
                 if (result.stepUpPercentage > 0) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -218,12 +253,12 @@ fun SIPCalculatorMainScreen(
                         }
                     }
                 }
-                
+
                 // Final monthly investment amount (after step-ups)
                 if (result.stepUpPercentage > 0) {
-                    val finalMonthlyAmount = result.monthlyInvestment * 
+                    val finalMonthlyAmount = result.monthlyInvestment *
                         Math.pow(1 + result.stepUpPercentage / 100, result.durationInYears.toDouble())
-                    
+
                     Text(
                         text = "Final monthly SIP: ${formatCurrency(finalMonthlyAmount, currencyCode)}",
                         style = MaterialTheme.typography.bodySmall,

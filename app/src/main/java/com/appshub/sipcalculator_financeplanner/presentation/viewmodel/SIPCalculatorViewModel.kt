@@ -14,6 +14,7 @@ data class SIPCalculatorUiState(
     val annualReturnRate: String = "12",
     val durationInYears: String = "10",
     val stepUpPercentage: String = "10",
+    val initialLumpsum: String = "0",
     val isStepUpEnabled: Boolean = false,
     val result: SIPResult? = null,
     val isCalculating: Boolean = false,
@@ -67,6 +68,15 @@ class SIPCalculatorViewModel : ViewModel() {
             )
         }
     }
+
+    fun updateInitialLumpsum(value: String) {
+        val filteredValue = value.filter { it.isDigit() || it == '.' }
+        _uiState.value = _uiState.value.copy(
+            initialLumpsum = filteredValue,
+            error = null,
+            result = null
+        )
+    }
     
     fun toggleStepUp() {
         _uiState.value = _uiState.value.copy(
@@ -99,27 +109,29 @@ class SIPCalculatorViewModel : ViewModel() {
     fun calculateSIP() {
         viewModelScope.launch {
             val currentState = _uiState.value
-            
+
             try {
                 val monthlyAmount = currentState.monthlyInvestment.toDoubleOrNull()
                 val returnRate = currentState.annualReturnRate.toDoubleOrNull()
                 val duration = currentState.durationInYears.toIntOrNull()
-                val stepUp = if (currentState.isStepUpEnabled) 
-                    currentState.stepUpPercentage.toDoubleOrNull() ?: 0.0 
+                val stepUp = if (currentState.isStepUpEnabled)
+                    currentState.stepUpPercentage.toDoubleOrNull() ?: 0.0
                 else 0.0
-                
+                val lumpsum = currentState.initialLumpsum.toDoubleOrNull() ?: 0.0
+
                 if (monthlyAmount != null && returnRate != null && duration != null &&
                     monthlyAmount > 0 && returnRate > 0 && duration > 0) {
-                    
+
                     _uiState.value = currentState.copy(isCalculating = true)
-                    
+
                     val result = FinancialCalculator.calculateSIP(
                         monthlyInvestment = monthlyAmount,
                         annualReturnRate = returnRate,
                         durationInYears = duration,
-                        stepUpPercentage = stepUp
+                        stepUpPercentage = stepUp,
+                        initialLumpsum = lumpsum
                     )
-                    
+
                     _uiState.value = currentState.copy(
                         result = result,
                         isCalculating = false,

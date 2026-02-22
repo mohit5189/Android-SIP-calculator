@@ -124,7 +124,7 @@ fun SummaryCard(sipResult: SIPResult, currencyCode: String) {
                         currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     SummaryItem(
                         title = "Duration",
                         value = "${sipResult.durationInYears} years",
@@ -132,7 +132,21 @@ fun SummaryCard(sipResult: SIPResult, currencyCode: String) {
                         modifier = Modifier.weight(1f)
                     )
                 }
-                
+
+                if (sipResult.initialLumpsum > 0) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        SummaryItem(
+                            title = "Initial Lumpsum",
+                            amount = sipResult.initialLumpsum,
+                            currencyCode = currencyCode,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -143,7 +157,7 @@ fun SummaryCard(sipResult: SIPResult, currencyCode: String) {
                         currencyCode = currencyCode,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     if (sipResult.stepUpPercentage > 0) {
                         SummaryItem(
                             title = "Step-up",

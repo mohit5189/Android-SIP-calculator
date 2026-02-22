@@ -113,7 +113,11 @@ object SuggestionData {
     fun initialCorpus(currencySymbol: String) = listOf(
         "${currencySymbol}5,00,000", "${currencySymbol}10,00,000", "${currencySymbol}25,00,000", "${currencySymbol}50,00,000", "${currencySymbol}1,00,00,000"
     )
-    
+
+    fun lumpsumAmounts(currencySymbol: String) = listOf(
+        "${currencySymbol}10,000", "${currencySymbol}50,000", "${currencySymbol}1,00,000", "${currencySymbol}2,00,000", "${currencySymbol}5,00,000", "${currencySymbol}10,00,000"
+    )
+
     fun goalAmounts(currencySymbol: String) = listOf(
         "${currencySymbol}10,00,000", "${currencySymbol}25,00,000", "${currencySymbol}50,00,000", "${currencySymbol}1,00,00,000", "${currencySymbol}2,00,00,000", "${currencySymbol}5,00,00,000"
     )
