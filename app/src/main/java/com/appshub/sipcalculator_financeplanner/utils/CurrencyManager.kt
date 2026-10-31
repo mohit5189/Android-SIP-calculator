@@ -7,8 +7,7 @@ import androidx.compose.runtime.getValue
 import com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo
 import com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyPreferences
 
-class CurrencyManager(private val context: Context) {
-    private val preferences = CurrencyPreferences(context)
+class CurrencyManager(context: Context, private val preferences: CurrencyPreferences = CurrencyPreferences(context)) {
     
     fun getCurrencyFlow() = preferences.selectedCurrencyCode
     

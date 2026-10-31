@@ -18,17 +18,18 @@ import androidx.compose.ui.unit.dp
 import com.appshub.sipcalculator_financeplanner.data.models.FDResult
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.InputCard
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.ResultCard
-import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculationType
+import com.appshub.sipcalculator_financeplanner.utils.LocalCalculationHandler
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.FinancialCalculator
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FDCalculatorScreen(
     onBackClick: () -> Unit = {},
-    analyticsManager: FirebaseAnalyticsManager? = null,
+    analyticsManager: CalculatorAnalytics? = null,
     modifier: Modifier = Modifier
 ) {
     var principal by remember { mutableStateOf("") }
@@ -37,7 +38,7 @@ fun FDCalculatorScreen(
     var isCompoundInterest by remember { mutableStateOf(true) }
     var result by remember { mutableStateOf<FDResult?>(null) }
     
-    val context = LocalContext.current
+    val onCalculation = LocalCalculationHandler.current
     
     CurrencyProvider { currencyCode ->
         Column(
@@ -177,10 +178,7 @@ fun FDCalculatorScreen(
                             )
 
                             // Track calculation
-                            AdManager.getInstance().onCalculationPerformed(
-                                context as android.app.Activity,
-                                AdManager.Companion.CalculationType.FD
-                            )
+                            onCalculation(CalculationType.FD)
 
                             analyticsManager?.logButtonClick("calculate_fd", "FDCalculatorScreen")
                         }

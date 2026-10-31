@@ -18,24 +18,25 @@ import androidx.compose.ui.unit.dp
 import com.appshub.sipcalculator_financeplanner.data.models.PPFResult
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.InputCard
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.ResultCard
-import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculationType
+import com.appshub.sipcalculator_financeplanner.utils.LocalCalculationHandler
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.FinancialCalculator
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PPFCalculatorScreen(
     onBackClick: () -> Unit = {},
-    analyticsManager: FirebaseAnalyticsManager? = null,
+    analyticsManager: CalculatorAnalytics? = null,
     modifier: Modifier = Modifier
 ) {
     var yearlyDeposit by remember { mutableStateOf("") }
     var interestRate by remember { mutableStateOf("") }
     var result by remember { mutableStateOf<PPFResult?>(null) }
     
-    val context = LocalContext.current
+    val onCalculation = LocalCalculationHandler.current
     
     CurrencyProvider { currencyCode ->
         Column(
@@ -142,10 +143,7 @@ fun PPFCalculatorScreen(
                         result = FinancialCalculator.calculatePPF(yearlyDepositDouble, interestRateDouble)
                         
                         // Track calculation
-                        AdManager.getInstance().onCalculationPerformed(
-                            context as android.app.Activity,
-                            AdManager.Companion.CalculationType.PPF
-                        )
+                        onCalculation(CalculationType.PPF)
                         
                         analyticsManager?.logButtonClick("calculate_ppf", "PPFCalculatorScreen")
                     }

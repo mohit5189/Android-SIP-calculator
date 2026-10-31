@@ -23,18 +23,20 @@ import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.CompoundI
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.CompoundInterestUiState
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
-import com.appshub.sipcalculator_financeplanner.utils.AdManager
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculationType
+import com.appshub.sipcalculator_financeplanner.utils.LocalCalculationHandler
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @Composable
 fun CompoundInterestScreen(
-    analyticsManager: FirebaseAnalyticsManager? = null,
+    analyticsManager: CalculatorAnalytics? = null,
     modifier: Modifier = Modifier,
     viewModel: CompoundInterestViewModel = viewModel(),
     onBackClick: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    androidx.activity.compose.BackHandler(enabled = uiState.showDetailedBreakdown) { viewModel.hideDetailedBreakdown() }
     
     if (uiState.showDetailedBreakdown && uiState.result != null) {
         CurrencyProvider { currencyCode ->
@@ -63,13 +65,12 @@ fun CompoundInterestScreen(
 fun CompoundInterestMainScreen(
     uiState: CompoundInterestUiState,
     viewModel: CompoundInterestViewModel,
-    analyticsManager: FirebaseAnalyticsManager? = null,
+    analyticsManager: CalculatorAnalytics? = null,
     onBackClick: (() -> Unit)? = null,
     currencyCode: String,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val adManager = AdManager.getInstance()
+    val onCalculation = LocalCalculationHandler.current
     
     Column(
         modifier = modifier
@@ -193,10 +194,7 @@ fun CompoundInterestMainScreen(
                     onClick = {
                         analyticsManager?.logButtonClick("calculate_compound_interest", "CompoundInterestScreen")
                         viewModel.calculate()
-                        adManager.onCalculationPerformed(
-                            context as Activity,
-                            AdManager.Companion.CalculationType.COMPOUND_INTEREST
-                        )
+                        onCalculation(CalculationType.COMPOUND_INTEREST)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isLoading

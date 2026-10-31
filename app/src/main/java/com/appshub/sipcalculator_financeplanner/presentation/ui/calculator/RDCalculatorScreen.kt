@@ -17,17 +17,18 @@ import androidx.compose.ui.unit.dp
 import com.appshub.sipcalculator_financeplanner.data.models.RDResult
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.InputCard
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.ResultCard
-import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculationType
+import com.appshub.sipcalculator_financeplanner.utils.LocalCalculationHandler
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.FinancialCalculator
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RDCalculatorScreen(
     onBackClick: () -> Unit = {},
-    analyticsManager: FirebaseAnalyticsManager? = null,
+    analyticsManager: CalculatorAnalytics? = null,
     modifier: Modifier = Modifier
 ) {
     var monthlyDeposit by remember { mutableStateOf("") }
@@ -35,7 +36,7 @@ fun RDCalculatorScreen(
     var tenure by remember { mutableStateOf("") }
     var result by remember { mutableStateOf<RDResult?>(null) }
     
-    val context = LocalContext.current
+    val onCalculation = LocalCalculationHandler.current
     
     CurrencyProvider { currencyCode ->
         Column(
@@ -118,10 +119,7 @@ fun RDCalculatorScreen(
                         )
                         
                         // Track calculation
-                        AdManager.getInstance().onCalculationPerformed(
-                            context as android.app.Activity,
-                            AdManager.Companion.CalculationType.RD
-                        )
+                        onCalculation(CalculationType.RD)
                         
                         analyticsManager?.logButtonClick("calculate_rd", "RDCalculatorScreen")
                     }

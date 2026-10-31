@@ -7,7 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun formatCurrencyWithContext(amount: Double): String {
     val context = LocalContext.current
-    val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val currencyManager = LocalCurrencyManager.current ?: remember { CurrencyManager.getInstance(context) }
     val selectedCurrency by currencyManager.getCurrencyFlow().collectAsStateWithLifecycle(initialValue = "INR")
     
     return formatCurrency(amount, selectedCurrency)
@@ -17,7 +17,7 @@ fun formatCurrencyWithContext(amount: Double): String {
 @Composable
 fun CurrencyProvider(content: @Composable (String) -> Unit) {
     val context = LocalContext.current
-    val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val currencyManager = LocalCurrencyManager.current ?: remember { CurrencyManager.getInstance(context) }
     val selectedCurrency by currencyManager.getCurrencyFlow().collectAsStateWithLifecycle(initialValue = "INR")
     
     content(selectedCurrency)

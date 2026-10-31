@@ -1,9 +1,8 @@
 package com.appshub.sipcalculator_financeplanner
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.ViewModelProvider
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -29,60 +28,18 @@ import com.appshub.sipcalculator_financeplanner.data.entity.Goal
 import com.appshub.sipcalculator_financeplanner.di.ViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.appshub.sipcalculator_financeplanner.ui.theme.SIPCalculatorFInancePlannerTheme
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 import com.appshub.sipcalculator_financeplanner.utils.RatingManager
-import com.appshub.sipcalculator_financeplanner.utils.AdManager
-import com.google.android.gms.ads.MobileAds
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        // Initialize MobileAds SDK with your App ID
-        MobileAds.initialize(this) { }
-        // Show App Open Ad on launch
-        AdManager.getInstance().showAppOpenAdIfAvailable(this)
-        
-        // Initialize UI first to prevent splash screen hanging
-        setContent {
-            SIPCalculatorFInancePlannerTheme {
-                SIPCalculatorApp()
-            }
-        }
-        
-        // Initialize managers asynchronously to prevent blocking main thread
-        initializeManagersAsync()
-    }
-    
-    private fun initializeManagersAsync() {
-        // Use a separate thread for initialization to prevent main thread blocking
-        Thread {
-            try {
-                // Initialize rating manager (lightweight)
-                RatingManager.getInstance().initialize(this)
-                
-                // Initialize ads on main thread (required by AdMob)
-                runOnUiThread {
-                    try {
-                        AdManager.getInstance().initializeAds(this)
-                    } catch (e: Exception) {
-                        // Graceful fallback if ads fail to initialize
-                        android.util.Log.e("MainActivity", "Failed to initialize ads: ${e.message}")
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Failed to initialize managers: ${e.message}")
-            }
-        }.start()
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SIPCalculatorApp() {
+fun SIPCalculatorApp(
+    analyticsManager: CalculatorAnalytics? = null,
+    factory: ViewModelProvider.Factory? = null,
+    promotionsEnabled: Boolean = true
+) {
     val context = LocalContext.current
-    val analyticsManager = FirebaseAnalyticsManager.getInstance(context)
-    val viewModelFactory = remember { ViewModelFactory(context) }
+    val viewModelFactory = remember(context, factory) { factory ?: ViewModelFactory(context) }
     
     // Create ViewModels once and reuse them
     val goalViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalViewModel>(factory = viewModelFactory)
@@ -90,11 +47,11 @@ fun SIPCalculatorApp() {
     val debtViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.DebtViewModel>(factory = viewModelFactory)
     val goalHistoryViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalHistoryViewModel>(factory = viewModelFactory)
     val pinViewModel = viewModel<com.appshub.sipcalculator_financeplanner.presentation.viewmodel.PinViewModel>(factory = viewModelFactory)
-    var selectedCalculator by remember { mutableStateOf(0) }
+    var selectedCalculator by rememberSaveable { mutableStateOf(0) }
     var showMoreApps by remember { mutableStateOf(false) }
     var showRatingDialog by remember { mutableStateOf(false) }
     var isRatingEligible by remember { mutableStateOf(false) }
-    var moreScreenState by remember { mutableStateOf<MoreCalculatorType?>(null) }
+    var moreScreenState by rememberSaveable { mutableStateOf<MoreCalculatorType?>(null) }
     
     // Goal navigation states
     var showGoalSetup by remember { mutableStateOf(false) }
@@ -108,6 +65,25 @@ fun SIPCalculatorApp() {
     var showEditGoal by remember { mutableStateOf(false) }
     var editingGoal by remember { mutableStateOf<Goal?>(null) }
     var showSettings by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = showMoreApps || showSettings || showGoalSetup || showFinancialSetup ||
+        showGoalDashboard || showGoalHistory || moreScreenState != null || selectedCalculator != 0) {
+        when {
+            showMoreApps -> showMoreApps = false
+            showSettings -> showSettings = false
+            showGoalSetup -> { showGoalSetup = false; pendingGoalResult = null }
+            showFinancialSetup -> {
+                showFinancialSetup = false
+                showGoalDashboard = financialSetupSource == "manage"
+                if (!showGoalDashboard) selectedGoalId = null
+                financialSetupSource = null
+            }
+            showGoalHistory -> { showGoalHistory = false; showGoalDashboard = true }
+            showGoalDashboard -> { showGoalDashboard = false; selectedGoalId = null; selectedCalculator = 3 }
+            moreScreenState != null -> moreScreenState = null
+            else -> selectedCalculator = 0
+        }
+    }
     
     // Dynamic title based on current screen
     val currentTitle = when (moreScreenState) {
@@ -138,14 +114,14 @@ fun SIPCalculatorApp() {
     
     // Track initial screen view
     LaunchedEffect(Unit) {
-        analyticsManager.logScreenView(screenNames[0], "SIPCalculatorScreen")
+        analyticsManager?.logScreenView(screenNames[0], "SIPCalculatorScreen")
     }
     
     // Track screen changes
     LaunchedEffect(selectedCalculator) {
-        analyticsManager.logScreenView(screenNames[selectedCalculator], calculatorTitles[selectedCalculator])
+        analyticsManager?.logScreenView(screenNames[selectedCalculator], calculatorTitles[selectedCalculator])
         if (selectedCalculator > 0) {
-            analyticsManager.logNavigation(screenNames[0], screenNames[selectedCalculator])
+            analyticsManager?.logNavigation(screenNames[0], screenNames[selectedCalculator])
         }
     }
     
@@ -232,7 +208,8 @@ fun SIPCalculatorApp() {
             },
             goalViewModel = goalViewModel,
             savingViewModel = savingViewModel,
-            debtViewModel = debtViewModel
+            debtViewModel = debtViewModel,
+            analyticsManager = analyticsManager
         )
         return
     }
@@ -251,7 +228,8 @@ fun SIPCalculatorApp() {
     }
     
     // Check rating eligibility with delay to ensure app is fully loaded
-    LaunchedEffect(Unit) {
+    LaunchedEffect(promotionsEnabled) {
+        if (!promotionsEnabled) return@LaunchedEffect
         kotlinx.coroutines.delay(2000) // Wait 2 seconds after app starts
         try {
             isRatingEligible = RatingManager.getInstance().isEligibleToShowRating()
@@ -303,7 +281,7 @@ fun SIPCalculatorApp() {
                                     onClick = {
                                         showMenu = false
                                         showRatingDialog = true
-                                        analyticsManager.logButtonClick("rate_us_menu", "MainActivity")
+                                        analyticsManager?.logButtonClick("rate_us_menu", "MainActivity")
                                     },
                                     leadingIcon = {
                                         Icon(
@@ -315,12 +293,12 @@ fun SIPCalculatorApp() {
                             }
                             
                             // More Apps option
-                            DropdownMenuItem(
+                            if (promotionsEnabled) DropdownMenuItem(
                                 text = { Text("More Apps") },
                                 onClick = {
                                     showMenu = false
                                     showMoreApps = true
-                                    analyticsManager.logButtonClick("more_apps_menu", "MainActivity")
+                                    analyticsManager?.logButtonClick("more_apps_menu", "MainActivity")
                                 },
                                 leadingIcon = {
                                     Icon(
@@ -336,7 +314,7 @@ fun SIPCalculatorApp() {
                                 onClick = {
                                     showMenu = false
                                     showSettings = true
-                                    analyticsManager.logButtonClick("settings_menu", "MainActivity")
+                                    analyticsManager?.logButtonClick("settings_menu", "MainActivity")
                                 },
                                 leadingIcon = {
                                     Icon(
@@ -357,7 +335,7 @@ fun SIPCalculatorApp() {
                     label = { Text("SIP") },
                     selected = selectedCalculator == 0,
                     onClick = { 
-                        analyticsManager.logButtonClick("navigation_sip", screenNames[selectedCalculator])
+                        analyticsManager?.logButtonClick("navigation_sip", screenNames[selectedCalculator])
                         selectedCalculator = 0 
                     }
                 )
@@ -366,7 +344,7 @@ fun SIPCalculatorApp() {
                     label = { Text("SWP") },
                     selected = selectedCalculator == 1,
                     onClick = { 
-                        analyticsManager.logButtonClick("navigation_swp", screenNames[selectedCalculator])
+                        analyticsManager?.logButtonClick("navigation_swp", screenNames[selectedCalculator])
                         selectedCalculator = 1 
                     }
                 )
@@ -375,7 +353,7 @@ fun SIPCalculatorApp() {
                     label = { Text("Goal") },
                     selected = selectedCalculator == 2,
                     onClick = { 
-                        analyticsManager.logButtonClick("navigation_goal", screenNames[selectedCalculator])
+                        analyticsManager?.logButtonClick("navigation_goal", screenNames[selectedCalculator])
                         selectedCalculator = 2 
                     }
                 )
@@ -384,7 +362,7 @@ fun SIPCalculatorApp() {
                     label = { Text("My Goals") },
                     selected = selectedCalculator == 3,
                     onClick = { 
-                        analyticsManager.logButtonClick("navigation_my_goals", screenNames[selectedCalculator])
+                        analyticsManager?.logButtonClick("navigation_my_goals", screenNames[selectedCalculator])
                         selectedCalculator = 3 
                     }
                 )
@@ -393,7 +371,7 @@ fun SIPCalculatorApp() {
                     label = { Text("More") },
                     selected = selectedCalculator == 4,
                     onClick = { 
-                        analyticsManager.logButtonClick("navigation_more", screenNames[selectedCalculator])
+                        analyticsManager?.logButtonClick("navigation_more", screenNames[selectedCalculator])
                         selectedCalculator = 4 
                     }
                 )
@@ -425,7 +403,8 @@ fun SIPCalculatorApp() {
                         selectedCalculator = 2 // Navigate to Goal Calculator
                     },
                     goalViewModel = goalViewModel,
-                    pinViewModel = pinViewModel
+                    pinViewModel = pinViewModel,
+                    analyticsManager = analyticsManager
                 )
                 4 -> MoreScreen(
                     analyticsManager = analyticsManager,

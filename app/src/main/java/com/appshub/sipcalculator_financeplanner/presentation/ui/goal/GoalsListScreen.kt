@@ -23,7 +23,7 @@ import com.appshub.sipcalculator_financeplanner.presentation.ui.pin.PinScreen
 import com.appshub.sipcalculator_financeplanner.presentation.ui.pin.ForgotPinDialog
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 import androidx.compose.ui.platform.LocalContext
 import java.text.SimpleDateFormat
 import java.util.*
@@ -36,10 +36,9 @@ fun GoalsListScreen(
     onCreateGoal: () -> Unit,
     goalViewModel: GoalViewModel = viewModel(),
     pinViewModel: PinViewModel? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    analyticsManager: CalculatorAnalytics? = null
 ) {
-    val context = LocalContext.current
-    val analyticsManager = remember { FirebaseAnalyticsManager.getInstance(context) }
     
     val goalState by goalViewModel.uiState.collectAsStateWithLifecycle()
     val pinState by pinViewModel?.uiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(PinUiState()) }
@@ -55,7 +54,7 @@ fun GoalsListScreen(
     
     // Track screen view and refresh data when screen is visible
     LaunchedEffect(Unit) {
-        analyticsManager.logGoalListScreenView()
+        analyticsManager?.logGoalListScreenView()
         goalViewModel.refreshGoals()
     }
     

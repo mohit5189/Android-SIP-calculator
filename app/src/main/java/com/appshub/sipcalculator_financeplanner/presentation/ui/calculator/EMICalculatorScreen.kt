@@ -17,17 +17,18 @@ import androidx.compose.ui.unit.dp
 import com.appshub.sipcalculator_financeplanner.data.models.EMIResult
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.InputCard
 import com.appshub.sipcalculator_financeplanner.presentation.ui.common.ResultCard
-import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculationType
+import com.appshub.sipcalculator_financeplanner.utils.LocalCalculationHandler
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.FinancialCalculator
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EMICalculatorScreen(
     onBackClick: () -> Unit = {},
-    analyticsManager: FirebaseAnalyticsManager? = null,
+    analyticsManager: CalculatorAnalytics? = null,
     modifier: Modifier = Modifier
 ) {
     var loanAmount by remember { mutableStateOf("") }
@@ -35,7 +36,7 @@ fun EMICalculatorScreen(
     var loanTenure by remember { mutableStateOf("") }
     var result by remember { mutableStateOf<EMIResult?>(null) }
     
-    val context = LocalContext.current
+    val onCalculation = LocalCalculationHandler.current
     
     CurrencyProvider { currencyCode ->
         Column(
@@ -126,10 +127,7 @@ fun EMICalculatorScreen(
                             )
 
                             // Track calculation
-                            AdManager.getInstance().onCalculationPerformed(
-                                context as android.app.Activity,
-                                AdManager.Companion.CalculationType.EMI
-                            )
+                            onCalculation(CalculationType.EMI)
 
                             analyticsManager?.logButtonClick("calculate_emi", "EMICalculatorScreen")
                         }

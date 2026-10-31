@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 
 enum class MoreCalculatorType {
     SIMPLE_INTEREST,
@@ -27,7 +27,7 @@ enum class MoreCalculatorType {
 
 @Composable
 fun MoreScreen(
-    analyticsManager: FirebaseAnalyticsManager? = null,
+    analyticsManager: CalculatorAnalytics? = null,
     currentCalculator: MoreCalculatorType? = null,
     onCalculatorChanged: (MoreCalculatorType?) -> Unit = {},
     modifier: Modifier = Modifier
@@ -129,7 +129,7 @@ fun MoreScreen(
 @Composable
 fun MoreMainScreen(
     onCalculatorSelected: (MoreCalculatorType) -> Unit,
-    analyticsManager: FirebaseAnalyticsManager? = null,
+    analyticsManager: CalculatorAnalytics? = null,
     modifier: Modifier = Modifier
 ) {
     Column(

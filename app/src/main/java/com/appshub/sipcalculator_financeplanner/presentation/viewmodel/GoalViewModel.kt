@@ -21,7 +21,7 @@ data class GoalUiState(
 
 class GoalViewModel(
     private val repository: GoalRepository,
-    private val analyticsManager: com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager? = null
+    private val analyticsManager: com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics? = null
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(GoalUiState())

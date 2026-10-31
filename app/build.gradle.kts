@@ -9,6 +9,7 @@ plugins {
 }
 
 android {
+    sourceSets.getByName("main").java.srcDir("src/standalone/java")
     namespace = "com.appshub.sipcalculator_financeplanner"
     compileSdk = 35
 
@@ -80,6 +81,8 @@ android {
     // NDK configuration for 16 KB page size support
     ndkVersion = "26.1.10909125"
 }
+
+ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
 dependencies {
     // Firebase BOM

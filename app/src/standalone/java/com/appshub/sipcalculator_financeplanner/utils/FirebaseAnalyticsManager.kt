@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
 
-class FirebaseAnalyticsManager private constructor(private val context: Context) {
+class FirebaseAnalyticsManager private constructor(private val context: Context) : CalculatorAnalytics {
     
     private val firebaseAnalytics: FirebaseAnalytics = FirebaseAnalytics.getInstance(context)
     private val isAnalyticsEnabled = !isDebugBuild()
@@ -43,7 +43,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
     }
     
     // Screen View Events
-    fun logScreenView(screenName: String, screenClass: String? = null) {
+    override fun logScreenView(screenName: String, screenClass: String?) {
         if (!isAnalyticsEnabled) {
             Log.d(TAG, "Analytics disabled - Skipping screen view: $screenName")
             return
@@ -56,7 +56,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
     }
     
     // SIP Calculator Events
-    fun logSIPCalculation(
+    override fun logSIPCalculation(
         monthlyInvestment: Double,
         expectedReturn: Double,
         timePeriod: Int,
@@ -73,7 +73,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
     }
     
     // SWP Calculator Events
-    fun logSWPCalculation(
+    override fun logSWPCalculation(
         initialInvestment: Double,
         monthlyWithdrawal: Double,
         expectedReturn: Double,
@@ -90,7 +90,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
     }
     
     // Goal Calculator Events
-    fun logGoalCalculation(
+    override fun logGoalCalculation(
         goalAmount: Double,
         currentAge: Int,
         retirementAge: Int,
@@ -109,7 +109,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
     }
     
     // Button Click Events
-    fun logButtonClick(buttonName: String, screenName: String) {
+    override fun logButtonClick(buttonName: String, screenName: String) {
         if (!isAnalyticsEnabled) {
             Log.d(TAG, "Analytics disabled - Skipping button click: $buttonName on $screenName")
             return
@@ -122,7 +122,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
     }
     
     // Navigation Events
-    fun logNavigation(fromScreen: String, toScreen: String) {
+    override fun logNavigation(fromScreen: String, toScreen: String) {
         if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             putString("from_screen", fromScreen)
@@ -132,7 +132,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
     }
     
     // Generic Custom Event
-    fun logCustomEvent(eventName: String, parameters: Map<String, Any>) {
+    override fun logCustomEvent(eventName: String, parameters: Map<String, Any>) {
         if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             parameters.forEach { (key, value) ->
@@ -151,7 +151,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
     }
     
     // Goal Management Events
-    fun logGoalCreated(goalType: String, targetAmount: Double) {
+    override fun logGoalCreated(goalType: String, targetAmount: Double) {
         if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             putString("goal_type", goalType)
@@ -160,7 +160,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
         firebaseAnalytics.logEvent("goal_created", bundle)
     }
     
-    fun logGoalDeleted(goalType: String, targetAmount: Double) {
+    override fun logGoalDeleted(goalType: String, targetAmount: Double) {
         if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             putString("goal_type", goalType)
@@ -170,7 +170,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
     }
     
     // Investment Management Events
-    fun logInvestmentAdded(goalId: String, amount: Double, investmentType: String) {
+    override fun logInvestmentAdded(goalId: String, amount: Double, investmentType: String) {
         if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             putString("goal_id", goalId)
@@ -180,17 +180,17 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
         firebaseAnalytics.logEvent("investment_added", bundle)
     }
     
-    fun logInvestmentScreenView() {
+    override fun logInvestmentScreenView() {
         if (!isAnalyticsEnabled) return
         logScreenView("add_investment", "InvestmentScreen")
     }
     
-    fun logGoalListScreenView() {
+    override fun logGoalListScreenView() {
         if (!isAnalyticsEnabled) return
         logScreenView("goal_list", "GoalsListScreen")
     }
     
-    fun logGoalDetailScreenView(goalId: String) {
+    override fun logGoalDetailScreenView(goalId: String) {
         if (!isAnalyticsEnabled) return
         val bundle = Bundle().apply {
             putString(FirebaseAnalytics.Param.SCREEN_NAME, "goal_detail")
@@ -201,7 +201,7 @@ class FirebaseAnalyticsManager private constructor(private val context: Context)
     }
     
     // Debug utility to check if analytics is enabled
-    fun getAnalyticsStatus(): Boolean {
+    override fun getAnalyticsStatus(): Boolean {
         return isAnalyticsEnabled
     }
 }

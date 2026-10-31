@@ -22,18 +22,20 @@ import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SimpleInt
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SimpleInterestUiState
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
-import com.appshub.sipcalculator_financeplanner.utils.AdManager
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculationType
+import com.appshub.sipcalculator_financeplanner.utils.LocalCalculationHandler
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @Composable
 fun SimpleInterestScreen(
-    analyticsManager: FirebaseAnalyticsManager? = null,
+    analyticsManager: CalculatorAnalytics? = null,
     modifier: Modifier = Modifier,
     viewModel: SimpleInterestViewModel = viewModel(),
     onBackClick: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    androidx.activity.compose.BackHandler(enabled = uiState.showDetailedBreakdown) { viewModel.hideDetailedBreakdown() }
     
     if (uiState.showDetailedBreakdown && uiState.result != null) {
         CurrencyProvider { currencyCode ->
@@ -62,13 +64,12 @@ fun SimpleInterestScreen(
 fun SimpleInterestMainScreen(
     uiState: SimpleInterestUiState,
     viewModel: SimpleInterestViewModel,
-    analyticsManager: FirebaseAnalyticsManager? = null,
+    analyticsManager: CalculatorAnalytics? = null,
     onBackClick: (() -> Unit)? = null,
     currencyCode: String,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val adManager = AdManager.getInstance()
+    val onCalculation = LocalCalculationHandler.current
     
     Column(
         modifier = modifier
@@ -158,10 +159,7 @@ fun SimpleInterestMainScreen(
                     onClick = {
                         analyticsManager?.logButtonClick("calculate_simple_interest", "SimpleInterestScreen")
                         viewModel.calculate()
-                        adManager.onCalculationPerformed(
-                            context as Activity,
-                            AdManager.Companion.CalculationType.SIMPLE_INTEREST
-                        )
+                        onCalculation(CalculationType.SIMPLE_INTEREST)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isLoading

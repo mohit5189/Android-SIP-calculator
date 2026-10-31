@@ -11,20 +11,20 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "currency_preferences")
 
-class CurrencyPreferences(private val context: Context) {
+class CurrencyPreferences(context: Context, private val store: DataStore<Preferences> = context.dataStore) {
     
     companion object {
         private val CURRENCY_CODE_KEY = stringPreferencesKey("selected_currency_code")
         const val DEFAULT_CURRENCY = "INR"
     }
     
-    val selectedCurrencyCode: Flow<String> = context.dataStore.data
+    val selectedCurrencyCode: Flow<String> = store.data
         .map { preferences ->
             preferences[CURRENCY_CODE_KEY] ?: DEFAULT_CURRENCY
         }
     
     suspend fun setCurrencyCode(currencyCode: String) {
-        context.dataStore.edit { preferences ->
+        store.edit { preferences ->
             preferences[CURRENCY_CODE_KEY] = currencyCode
         }
     }

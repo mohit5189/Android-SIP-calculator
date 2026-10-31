@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyManager
+import com.appshub.sipcalculator_financeplanner.utils.LocalCurrencyManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,7 +29,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val currencyManager = LocalCurrencyManager.current ?: remember { CurrencyManager.getInstance(context) }
     val selectedCurrency by currencyManager.getCurrencyFlow().collectAsStateWithLifecycle(initialValue = "INR")
     var showCurrencyDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()

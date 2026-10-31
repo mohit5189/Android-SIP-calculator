@@ -33,7 +33,7 @@ import com.appshub.sipcalculator_financeplanner.data.entity.*
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.*
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 import androidx.compose.ui.platform.LocalContext
 import kotlin.math.cos
 import kotlin.math.sin
@@ -52,10 +52,9 @@ fun GoalDashboardScreen(
     goalViewModel: GoalViewModel = viewModel(),
     savingViewModel: SavingViewModel = viewModel(),
     debtViewModel: DebtViewModel = viewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    analyticsManager: CalculatorAnalytics? = null
 ) {
-    val context = LocalContext.current
-    val analyticsManager = remember { FirebaseAnalyticsManager.getInstance(context) }
     
     val goalState by goalViewModel.uiState.collectAsStateWithLifecycle()
     val savingState by savingViewModel.uiState.collectAsStateWithLifecycle()
@@ -65,7 +64,7 @@ fun GoalDashboardScreen(
         goalViewModel.selectGoal(goalId)
         savingViewModel.loadSavingsForGoal(goalId)
         debtViewModel.loadDebtsForGoal(goalId)
-        analyticsManager.logGoalDetailScreenView(goalId)
+        analyticsManager?.logGoalDetailScreenView(goalId)
     }
     
     val goal = goalState.selectedGoal
@@ -945,4 +944,3 @@ fun generateInsights(goal: Goal, progress: GoalProgress, currencyCode: String): 
     
     return insights
 }
-

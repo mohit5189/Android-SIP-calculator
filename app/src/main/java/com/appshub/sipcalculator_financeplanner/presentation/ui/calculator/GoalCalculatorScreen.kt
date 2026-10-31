@@ -26,18 +26,20 @@ import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalCalcu
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.GoalCalculatorUiState
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
-import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculationType
+import com.appshub.sipcalculator_financeplanner.utils.LocalCalculationHandler
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalCalculatorScreen(
-    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager? = null,
+    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics? = null,
     onSetAsGoal: ((com.appshub.sipcalculator_financeplanner.data.models.GoalResult) -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: GoalCalculatorViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    androidx.activity.compose.BackHandler(enabled = uiState.showDetailedBreakdown) { viewModel.hideDetailedBreakdown() }
     
     if (uiState.showDetailedBreakdown && uiState.result != null) {
         CurrencyProvider { currencyCode ->
@@ -65,7 +67,7 @@ fun GoalCalculatorScreen(
 fun GoalCalculatorMainScreen(
     uiState: GoalCalculatorUiState,
     viewModel: GoalCalculatorViewModel,
-    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager? = null,
+    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics? = null,
     currencyCode: String,
     modifier: Modifier = Modifier
 ) {
@@ -161,17 +163,14 @@ fun GoalCalculatorMainScreen(
             }
         }
         
-        val context = LocalContext.current
+        val onCalculation = LocalCalculationHandler.current
         
         // Calculate Button
         Button(
             onClick = { 
                 viewModel.calculateGoal() 
                 
-                // Trigger ad logic after calculation
-                if (context is android.app.Activity) {
-                    AdManager.getInstance().onCalculationPerformed(context, AdManager.Companion.CalculationType.GOAL)
-                }
+                onCalculation(CalculationType.GOAL)
             },
             modifier = Modifier
                 .fillMaxWidth()

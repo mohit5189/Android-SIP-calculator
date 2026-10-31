@@ -20,17 +20,19 @@ import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SIPCalcul
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SIPCalculatorUiState
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
-import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculationType
+import com.appshub.sipcalculator_financeplanner.utils.LocalCalculationHandler
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SIPCalculatorScreen(
-    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager? = null,
+    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics? = null,
     modifier: Modifier = Modifier,
     viewModel: SIPCalculatorViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    androidx.activity.compose.BackHandler(enabled = uiState.showDetailedBreakdown) { viewModel.hideDetailedBreakdown() }
     
     if (uiState.showDetailedBreakdown && uiState.result != null) {
         SIPDetailedBreakdownScreen(
@@ -51,7 +53,7 @@ fun SIPCalculatorScreen(
 fun SIPCalculatorMainScreen(
     uiState: SIPCalculatorUiState,
     viewModel: SIPCalculatorViewModel,
-    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager? = null,
+    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics? = null,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -150,7 +152,7 @@ fun SIPCalculatorMainScreen(
             }
         }
         
-        val context = LocalContext.current
+        val onCalculation = LocalCalculationHandler.current
         
         // Calculate Button
         Button(
@@ -158,10 +160,7 @@ fun SIPCalculatorMainScreen(
                 analyticsManager?.logButtonClick("calculate_sip", "sip_calculator")
                 viewModel.calculateSIP()
                 
-                // Trigger ad logic after calculation
-                if (context is android.app.Activity) {
-                    AdManager.getInstance().onCalculationPerformed(context, AdManager.Companion.CalculationType.SIP)
-                }
+                onCalculation(CalculationType.SIP)
                 
                 // Log the calculation with parameters after calculation
                 uiState.result?.let { result ->

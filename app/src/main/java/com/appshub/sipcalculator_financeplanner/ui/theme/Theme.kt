@@ -50,13 +50,14 @@ fun SIPCalculatorFInancePlannerTheme(
     darkTheme: Boolean = false, // Always use light theme
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false, // Disable dynamic colors to ensure consistent light theme
+    manageSystemBars: Boolean = true,
     content: @Composable () -> Unit
 ) {
     // Always use light color scheme
     val colorScheme = LightColorScheme
     
     val view = LocalView.current
-    if (!view.isInEditMode) {
+    if (manageSystemBars && !view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             // Remove deprecated statusBarColor setting for Android 15 compatibility

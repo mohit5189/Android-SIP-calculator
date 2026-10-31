@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics
 
 data class AppInfo(
     val name: String,
@@ -36,7 +36,7 @@ data class AppInfo(
 @Composable
 fun MoreAppsScreen(
     onBackClick: () -> Unit,
-    analyticsManager: FirebaseAnalyticsManager? = null
+    analyticsManager: CalculatorAnalytics? = null
 ) {
     val context = LocalContext.current
     

@@ -7,9 +7,7 @@ import com.appshub.sipcalculator_financeplanner.data.database.GoalDatabase
 import com.appshub.sipcalculator_financeplanner.data.repository.GoalRepository
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.*
 
-class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    
-    private val database by lazy { GoalDatabase.getDatabase(context) }
+class ViewModelFactory(context: Context, private val database: GoalDatabase = GoalDatabase.getDatabase(context)) : ViewModelProvider.Factory {
     private val repository by lazy { 
         GoalRepository(
             goalDao = database.goalDao(),

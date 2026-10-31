@@ -23,17 +23,19 @@ import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SWPCalcul
 import com.appshub.sipcalculator_financeplanner.presentation.viewmodel.SWPCalculatorUiState
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
-import com.appshub.sipcalculator_financeplanner.utils.AdManager
+import com.appshub.sipcalculator_financeplanner.utils.CalculationType
+import com.appshub.sipcalculator_financeplanner.utils.LocalCalculationHandler
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SWPCalculatorScreen(
-    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager? = null,
+    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics? = null,
     modifier: Modifier = Modifier,
     viewModel: SWPCalculatorViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    androidx.activity.compose.BackHandler(enabled = uiState.showDetailedBreakdown) { viewModel.hideDetailedBreakdown() }
     
     if (uiState.showDetailedBreakdown && uiState.result != null) {
         CurrencyProvider { currencyCode ->
@@ -57,7 +59,7 @@ fun SWPCalculatorScreen(
 fun SWPCalculatorMainScreen(
     uiState: SWPCalculatorUiState,
     viewModel: SWPCalculatorViewModel,
-    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.FirebaseAnalyticsManager? = null,
+    analyticsManager: com.appshub.sipcalculator_financeplanner.utils.CalculatorAnalytics? = null,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -154,17 +156,14 @@ fun SWPCalculatorMainScreen(
             }
         }
         
-        val context = LocalContext.current
+        val onCalculation = LocalCalculationHandler.current
         
         // Calculate Button
         Button(
             onClick = { 
                 viewModel.calculateSWP() 
                 
-                // Trigger ad logic after calculation
-                if (context is android.app.Activity) {
-                    AdManager.getInstance().onCalculationPerformed(context, AdManager.Companion.CalculationType.SWP)
-                }
+                onCalculation(CalculationType.SWP)
             },
             modifier = Modifier
                 .fillMaxWidth()
