@@ -4,6 +4,10 @@ The standalone Android app and embedded hosts share `app/src/main/java`.
 `SIPCalculatorApp` exposes the original SIP, SWP, goal and additional calculator UI.
 Its optional factory, analytics and promotion parameters support embedded hosts
 without changing the calculation implementations.
+The optional `hostReturnAction` composable is placed at the right of the calculator
+tab bar. Full-screen subflows retain it in a bottom bar at the same position.
+It defaults to null, so standalone navigation is unchanged. Hosts own its icon,
+accessibility label and return callback; no host banner is added above the UI.
 
 Standalone Activity/Application, AdMob and Firebase analytics implementation are
 in `app/src/standalone/java`, included only by this repository's application build.

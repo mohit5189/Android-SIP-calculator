@@ -6,6 +6,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -36,7 +39,8 @@ import com.appshub.sipcalculator_financeplanner.utils.RatingManager
 fun SIPCalculatorApp(
     analyticsManager: CalculatorAnalytics? = null,
     factory: ViewModelProvider.Factory? = null,
-    promotionsEnabled: Boolean = true
+    promotionsEnabled: Boolean = true,
+    hostReturnAction: (@Composable () -> Unit)? = null
 ) {
     val context = LocalContext.current
     val viewModelFactory = remember(context, factory) { factory ?: ViewModelFactory(context) }
@@ -127,23 +131,28 @@ fun SIPCalculatorApp(
     
     // Handle More Apps screen
     if (showMoreApps) {
+        CalculatorSubscreen(hostReturnAction) {
         MoreAppsScreen(
             onBackClick = { showMoreApps = false },
             analyticsManager = analyticsManager
         )
+        }
         return
     }
     
     // Handle Settings screen
     if (showSettings) {
+        CalculatorSubscreen(hostReturnAction) {
         SettingsScreen(
             onBackClick = { showSettings = false }
         )
+        }
         return
     }
     
     // Handle Goal Setup Flow
     if (showGoalSetup && pendingGoalResult != null) {
+        CalculatorSubscreen(hostReturnAction) {
         GoalSetupScreen(
             goalResult = pendingGoalResult!!,
             onBackClick = { 
@@ -158,10 +167,12 @@ fun SIPCalculatorApp(
             },
             goalViewModel = goalViewModel
         )
+        }
         return
     }
     
     if (showFinancialSetup && selectedGoalId != null) {
+        CalculatorSubscreen(hostReturnAction) {
         FinancialSetupScreen(
             goalId = selectedGoalId!!,
             onBackClick = { 
@@ -180,10 +191,12 @@ fun SIPCalculatorApp(
             savingViewModel = savingViewModel,
             debtViewModel = debtViewModel
         )
+        }
         return
     }
     
     if (showGoalDashboard && selectedGoalId != null) {
+        CalculatorSubscreen(hostReturnAction) {
         GoalDashboardScreen(
             goalId = selectedGoalId!!,
             onBackClick = { 
@@ -211,10 +224,12 @@ fun SIPCalculatorApp(
             debtViewModel = debtViewModel,
             analyticsManager = analyticsManager
         )
+        }
         return
     }
     
     if (showGoalHistory && selectedGoalId != null) {
+        CalculatorSubscreen(hostReturnAction) {
         GoalHistoryScreen(
             goalId = selectedGoalId!!,
             goalName = selectedGoalName,
@@ -224,6 +239,7 @@ fun SIPCalculatorApp(
             },
             historyViewModel = goalHistoryViewModel
         )
+        }
         return
     }
     
@@ -375,6 +391,7 @@ fun SIPCalculatorApp(
                         selectedCalculator = 4 
                     }
                 )
+                hostReturnAction?.invoke()
             }
         }
     ) { paddingValues ->
@@ -429,6 +446,22 @@ fun SIPCalculatorApp(
                 editingGoal = null
             }
         )
+    }
+}
+
+@Composable
+private fun CalculatorSubscreen(hostReturnAction: (@Composable () -> Unit)?, content: @Composable () -> Unit) {
+    if (hostReturnAction == null) {
+        content()
+    } else {
+        Scaffold(contentWindowInsets = WindowInsets(0), bottomBar = {
+            NavigationBar {
+                Spacer(Modifier.weight(1f))
+                hostReturnAction()
+            }
+        }) { padding ->
+            Box(Modifier.padding(padding).consumeWindowInsets(padding)) { content() }
+        }
     }
 }
 
