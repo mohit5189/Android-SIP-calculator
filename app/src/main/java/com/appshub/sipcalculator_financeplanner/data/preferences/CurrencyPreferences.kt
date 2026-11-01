@@ -45,12 +45,24 @@ data class CurrencyInfo(
                 CurrencyInfo("GBP", "British Pound", "£", "🇬🇧"),
                 CurrencyInfo("AUD", "Australian Dollar", "A$", "🇦🇺"),
                 CurrencyInfo("CAD", "Canadian Dollar", "C$", "🇨🇦"),
-                CurrencyInfo("JPY", "Japanese Yen", "¥", "🇯🇵")
+                CurrencyInfo("JPY", "Japanese Yen", "¥", "🇯🇵"),
+                CurrencyInfo("CNY", "Chinese Yuan", "CN¥", "🇨🇳"),
+                CurrencyInfo("SGD", "Singapore Dollar", "S$", "🇸🇬"),
+                CurrencyInfo("AED", "UAE Dirham", "AED", "🇦🇪"),
+                CurrencyInfo("SAR", "Saudi Riyal", "SAR", "🇸🇦"),
+                CurrencyInfo("ZAR", "South African Rand", "ZAR", "🇿🇦"),
+                CurrencyInfo("BRL", "Brazilian Real", "R$", "🇧🇷"),
+                CurrencyInfo("MXN", "Mexican Peso", "MX$", "🇲🇽")
             )
         }
         
         fun getCurrencyByCode(code: String): CurrencyInfo? {
-            return getSupportedCurrencies().find { it.code == code }
+            return getSupportedCurrencies().find { it.code == code } ?: try {
+                java.util.Currency.getInstance(code).let {
+                    CurrencyInfo(it.currencyCode, it.getDisplayName(java.util.Locale.ENGLISH),
+                        it.getSymbol(java.util.Locale.US), "")
+                }
+            } catch (_: IllegalArgumentException) { null }
         }
     }
 }

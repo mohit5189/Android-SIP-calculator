@@ -5,11 +5,9 @@ import com.appshub.sipcalculator_financeplanner.data.preferences.CurrencyInfo
 import java.util.*
 
 fun formatCurrency(amount: Double, currencyCode: String = "INR"): String {
-    val currency = CurrencyInfo.getCurrencyByCode(currencyCode) ?: CurrencyInfo.getCurrencyByCode("INR")!!
+    val currency = CurrencyInfo.getCurrencyByCode(currencyCode) ?: CurrencyInfo.getCurrencyByCode("USD")!!
     
-    // Use consistent Indian locale formatting regardless of currency
-    // This ensures amounts are displayed as-is with consistent formatting
-    val locale = Locale("en", "IN")
+    val locale = if (currency.code == "INR") Locale("en", "IN") else Locale.US
     val formatter = NumberFormat.getInstance(locale)
     val formattedAmount = formatter.format(amount.toLong())
     

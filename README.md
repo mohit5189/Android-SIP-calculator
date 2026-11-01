@@ -15,6 +15,12 @@ The standalone manifest and Firebase configuration must not be merged into a hos
 Optional calculation events use `LocalCalculationHandler`; currency can be supplied
 through `LocalCurrencyManager`. An embedded host must inject its own owner-scoped
 GoalDatabase and currency DataStore instead of using the standalone singletons.
+Hosts can additionally supply `LocalHostCurrencyCode` for synchronous display
+currency ownership. It takes precedence over the local store, including symbols
+and grouping, without a delayed preference-copy loop. Embedded Settings explains
+that the host owns currency selection; standalone hosts that omit this value keep
+their independent picker. This changes presentation, not existing financial inputs
+or country-specific calculation rules.
 
 For Paisa integration, read the parent repository's `AGENTS.md` and `docs/`.
 Its `calculator` library consumes this repository as a pinned submodule, without

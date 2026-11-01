@@ -9,3 +9,4 @@ enum class CalculationType {
 // Hosts explicitly opt into calculation events; embedded calculators do not load ads.
 val LocalCalculationHandler = staticCompositionLocalOf<(CalculationType) -> Unit> { {} }
 val LocalCurrencyManager = staticCompositionLocalOf<CurrencyManager?> { null }
+val LocalHostCurrencyCode = staticCompositionLocalOf<String?> { null }

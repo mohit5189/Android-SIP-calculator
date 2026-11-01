@@ -30,7 +30,9 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val currencyManager = LocalCurrencyManager.current ?: remember { CurrencyManager.getInstance(context) }
-    val selectedCurrency by currencyManager.getCurrencyFlow().collectAsStateWithLifecycle(initialValue = "INR")
+    val hostCurrency = com.appshub.sipcalculator_financeplanner.utils.LocalHostCurrencyCode.current
+    val storedCurrency by currencyManager.getCurrencyFlow().collectAsStateWithLifecycle(initialValue = "INR")
+    val selectedCurrency = hostCurrency ?: storedCurrency
     var showCurrencyDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     
@@ -80,13 +82,13 @@ fun SettingsScreen(
                 SettingsItem(
                     icon = Icons.Default.AttachMoney,
                     title = "Currency",
-                    subtitle = "Select your preferred currency",
+                    subtitle = if (hostCurrency == null) "Select your preferred currency" else "Managed in Paisa Settings",
                     trailing = {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            val currentCurrency = currencies.find { it.code == selectedCurrency }
+                            val currentCurrency = CurrencyInfo.getCurrencyByCode(selectedCurrency)
                             if (currentCurrency != null) {
                                 Text(
                                     text = "${currentCurrency.flag} ${currentCurrency.code}",
@@ -199,7 +201,7 @@ fun SettingsScreen(
                 SettingsItem(
                     icon = Icons.Default.Build,
                     title = "Build",
-                    subtitle = "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})"
+                    subtitle = "Android ${android.os.Build.VERSION.RELEASE}"
                 )
             }
             
@@ -207,7 +209,12 @@ fun SettingsScreen(
     }
     
     // Currency Selection Dialog
-    if (showCurrencyDialog) {
+    if (showCurrencyDialog && hostCurrency != null) {
+        AlertDialog(onDismissRequest = { showCurrencyDialog = false },
+            title = { Text("Country & currency") },
+            text = { Text("Use Paisa Settings > Country & currency to change the display currency throughout the app. Amounts are not converted.") },
+            confirmButton = { TextButton(onClick = { showCurrencyDialog = false }) { Text("OK") } })
+    } else if (showCurrencyDialog) {
         CurrencySelectionDialog(
             currencies = currencies,
             selectedCurrency = selectedCurrency,
