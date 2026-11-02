@@ -22,10 +22,19 @@ that the host owns currency selection; standalone hosts that omit this value kee
 their independent picker. This changes presentation, not existing financial inputs
 or country-specific calculation rules.
 
+Hosts with their own navigation header can provide `LocalHostOwnsNavigation=true`
+when embedding the individual calculator screens. This hides their internal back
+rows/toolbars, including detailed results; the host should dispatch Back through
+Android's back dispatcher so existing result-screen handlers run before leaving
+the tool. The default is false and preserves all standalone back controls.
+
 For Paisa integration, read the parent repository's `AGENTS.md` and `docs/`.
 Its `calculator` library consumes this repository as a pinned submodule, without
-ads or calculator telemetry, and supplies account isolation and a persistent
-return button. Calculator schema v3 is exported; host databases must use explicit
+ads or calculator telemetry. Paisa hosts an eight-tool directory, account-isolated
+ViewModels and persistent bottom tabs, with one host-header Back arrow and a
+centered calculator name on selected tools/results; it does not open the
+standalone shell or goal database.
+Calculator schema v3 is exported; host databases must use explicit
 migrations rather than the legacy standalone destructive-migration configuration.
 
 Standalone compilation:

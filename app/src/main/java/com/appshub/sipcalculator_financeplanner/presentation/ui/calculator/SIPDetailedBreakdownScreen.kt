@@ -32,6 +32,7 @@ fun SIPDetailedBreakdownScreen(
     modifier: Modifier = Modifier
 ) {
     var selectedYear by remember { mutableStateOf<Int?>(null) }
+    val showBack = !com.appshub.sipcalculator_financeplanner.utils.LocalHostOwnsNavigation.current
     
     CurrencyProvider { currencyCode ->
         LazyColumn(
@@ -40,7 +41,7 @@ fun SIPDetailedBreakdownScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
             // Back button
-            item {
+            if (showBack) item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically

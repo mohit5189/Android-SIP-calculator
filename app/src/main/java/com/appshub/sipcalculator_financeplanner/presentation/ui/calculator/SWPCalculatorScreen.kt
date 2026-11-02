@@ -214,13 +214,14 @@ fun SWPDetailedBreakdownScreen(
     currencyCode: String,
     modifier: Modifier = Modifier
 ) {
+    val showBack = !com.appshub.sipcalculator_financeplanner.utils.LocalHostOwnsNavigation.current
     androidx.compose.foundation.lazy.LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
             // Back button
-            item {
+            if (showBack) item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically

@@ -80,7 +80,7 @@ fun CompoundInterestMainScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Back button
-        if (onBackClick != null) {
+        if (onBackClick != null && !com.appshub.sipcalculator_financeplanner.utils.LocalHostOwnsNavigation.current) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -345,7 +345,7 @@ fun CompoundInterestDetailedBreakdownScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        TopAppBar(
+        if (!com.appshub.sipcalculator_financeplanner.utils.LocalHostOwnsNavigation.current) TopAppBar(
             title = { Text("Year-wise Breakdown") },
             navigationIcon = {
                 androidx.compose.material3.IconButton(onClick = onBackClick) {

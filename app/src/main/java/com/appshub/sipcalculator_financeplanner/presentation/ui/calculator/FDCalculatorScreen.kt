@@ -49,7 +49,7 @@ fun FDCalculatorScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Back button
-            Row(
+            if (!com.appshub.sipcalculator_financeplanner.utils.LocalHostOwnsNavigation.current) Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
