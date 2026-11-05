@@ -11,8 +11,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.appshub.sipcalculator_financeplanner.ui.theme.GradientEnd
-import com.appshub.sipcalculator_financeplanner.ui.theme.GradientStart
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import java.text.NumberFormat
 import java.util.*
@@ -37,7 +35,7 @@ fun ResultCard(
             modifier = Modifier
                 .background(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(GradientStart, GradientEnd)
+                        colors = com.appshub.sipcalculator_financeplanner.utils.LocalHostResultGradient.current
                     )
                 )
                 .padding(20.dp)

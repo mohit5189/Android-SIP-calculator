@@ -18,8 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.appshub.sipcalculator_financeplanner.data.models.MonthlyData
 import com.appshub.sipcalculator_financeplanner.data.models.SIPResult
 import com.appshub.sipcalculator_financeplanner.data.models.YearWiseData
-import com.appshub.sipcalculator_financeplanner.ui.theme.GradientEnd
-import com.appshub.sipcalculator_financeplanner.ui.theme.GradientStart
 import com.appshub.sipcalculator_financeplanner.utils.formatCurrency
 import com.appshub.sipcalculator_financeplanner.utils.formatPercentage
 import com.appshub.sipcalculator_financeplanner.utils.CurrencyProvider
@@ -100,7 +98,7 @@ fun SummaryCard(sipResult: SIPResult, currencyCode: String) {
             modifier = Modifier
                 .background(
                     brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
-                        colors = listOf(GradientStart, GradientEnd)
+                        colors = com.appshub.sipcalculator_financeplanner.utils.LocalHostResultGradient.current
                     )
                 )
                 .padding(20.dp)

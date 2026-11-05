@@ -376,10 +376,7 @@ fun GoalSummaryCard(goalResult: com.appshub.sipcalculator_financeplanner.data.mo
             modifier = Modifier
                 .background(
                     brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
-                        colors = listOf(
-                            com.appshub.sipcalculator_financeplanner.ui.theme.GradientStart, 
-                            com.appshub.sipcalculator_financeplanner.ui.theme.GradientEnd
-                        )
+                        colors = com.appshub.sipcalculator_financeplanner.utils.LocalHostResultGradient.current
                     )
                 )
                 .padding(20.dp)
